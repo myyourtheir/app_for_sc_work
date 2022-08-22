@@ -4,6 +4,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
+
 class initial_parameters():
     def __init__(self):
         self.p10 = 0.784800  # 100м
@@ -30,8 +31,6 @@ class initial_parameters():
         self.v = self.v / 1000000
         self.t = 0
         self.T = self.L / (self.N * self.c)
-
-
 
 
 class Window(QMainWindow, initial_parameters):

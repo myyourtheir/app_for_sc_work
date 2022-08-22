@@ -1,16 +1,44 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
-
-
+import time
+import matplotlib.pyplot as plt
+import numpy as np
 import sys
+class initial_parameters():
+    def __init__(self):
+        self.p10 = 0.784800  # 100м
+        self.g = 9.81
+        self.c = 1000
+
+        self.d = 1000
+        self.o = 0.01
+        self.p20 = 0.15696  # 20 м
+        self.ro = 800
+        self.v = 10
+        self.t_rab = 1000  # Время, когда вкл насос
+        self.w0 = 3000
+        self.n = 2  # кол-во участков
+        self.N = 100 * self.n + 1  # Количество сечений
+        self.L = 100 * self.n + 1  # 1 - краевое условие
+
+        # Перевод в систему си
+        self.L = self.L * 1000
+        self.d = self.d / 1000
+        self.o = self.o / 1000
+        self.p10 = self.p10 * 1000000
+        self.p20 = self.p20 * 1000000
+        self.v = self.v / 1000000
+        self.t = 0
+        self.T = self.L / (self.N * self.c)
 
 
-class Window(QMainWindow):
+
+
+class Window(QMainWindow, initial_parameters):
     def __init__(self):
         super(Window, self).__init__()
         self.setWindowTitle("Mchar")
         self.setGeometry(500, 200, 1000, 750)
-
         """Основная строка трубопровода"""
         self.main_text = QtWidgets.QLabel(self)
         self.main_text.setText("Трубопровод: ")

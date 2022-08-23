@@ -19,19 +19,19 @@ class initial_parameters_and_funcrions():
         self.v = 10
         self.t_rab = 1000  # Время, когда вкл насос
         self.w0 = 3000
-        self.n = 2  # кол-во участков
-        self.N = 100 * self.n + 1  # Количество сечений
-        self.L = 100 * self.n + 1  # 1 - краевое условие
+        # self.n = 2  # кол-во участков
+        # self.N = 100 * self.n + 1  # Количество сечений
+        # self.L = 100 * self.n + 1  # 1 - краевое условие
 
         # Перевод в систему си
-        self.L = self.L * 1000
+        # self.L = self.L * 1000
         self.d = self.d / 1000
         self.o = self.o / 1000
         self.p10 = self.p10 * 1000000
         self.p20 = self.p20 * 1000000
         self.v = self.v / 1000000
         self.t = 0
-        self.T = self.L / (self.N * self.c)
+        # self.T = self.L / (self.N * self.c)
 
     def find_lyam(self, Re, eps):
         if Re < 2320:
@@ -44,21 +44,7 @@ class initial_parameters_and_funcrions():
             lyam1 = 0.11 * (eps) ** 0.25
         return (lyam1)
 
-    def find_Jb(self, Davleniya, Skorosty):
-        Vjb = Skorosty
-        Re = abs(Vjb) * self.d / self.v
-        lyamjb = self.find_lyam(Re, self.o / self.d)
-        Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
-            Skorosty) * self.T * self.c / (2 * self.d)
-        return (Jb)
 
-    def find_Ja(self, Davleniya, Skorosty):
-        Vja = Skorosty
-        Re = abs(Vja) * self.d / self.v
-        lyamja = self.find_lyam(Re, self.o / self.d)
-        Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-            Skorosty) * self.T * self.c / (2 * self.d)
-        return (Ja)
 
 
 class Window(QMainWindow, initial_parameters_and_funcrions):
@@ -137,6 +123,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         """действия кнопок"""
         self.clicked_btns_add()
         self.clicked_btn_reset()
+        self.clicked_btn_start()
         """Кнопки добавления объектов"""
 
     def clicked_btns_add(self):
@@ -158,6 +145,36 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.main_text.setText("Pipeline: ")
         self.n_btn_Pump = 0
         self.n_btn_Pipe = 0
+
+    def clicked_btn_start(self):
+        self.btn_start.clicked.connect(lambda: self.start())
+
+        """Основная функция"""
+
+    def start(self):
+        """Создаю начальные списки соростей и давлений на основе количества кликов"""
+
+        def find_Jb(Davleniya, Skorosty):
+            Vjb = Skorosty
+            Re = abs(Vjb) * self.d / self.v
+            lyamjb = self.find_lyam(Re, self.o / self.d)
+            Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
+                Skorosty) * T * self.c / (2 * self.d)
+            return (Jb)
+
+        def find_Ja(Davleniya, Skorosty):
+            Vja = Skorosty
+            Re = abs(Vja) * self.d / self.v
+            lyamja = self.find_lyam(Re, self.o / self.d)
+            Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
+                Skorosty) * T * self.c / (2 * self.d)
+            return (Ja)
+        num_of_elements_in_lists = self.n_btn_Pump * 2 + self.n_btn_Pipe
+        L = self.n_btn_Pipe * 100000 + 1000
+        N = self.n_btn_Pipe * 100 + 2
+        P_0 = [0.1] * num_of_elements_in_lists
+        V_0 = P_0
+        srt_of_main_in_list = self.main_text.text().split('->')
 
 
 if __name__ == "__main__":

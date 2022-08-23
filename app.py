@@ -17,7 +17,7 @@ class initial_parameters_and_funcrions():
         self.p20 = 0.15696  # 20 м
         self.ro = 800
         self.v = 10
-        self.t_rab = 1000  # Время, когда вкл насос
+        self.t_rab = 1000  # Время работы
         self.w0 = 3000
         # self.n = 2  # кол-во участков
         # self.N = 100 * self.n + 1  # Количество сечений
@@ -45,8 +45,6 @@ class initial_parameters_and_funcrions():
         return (lyam1)
 
 
-
-
 class Window(QMainWindow, initial_parameters_and_funcrions):
     def __init__(self):
         super(Window, self).__init__()
@@ -58,7 +56,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         """Основная строка трубопровода"""
         self.main_text = QtWidgets.QLabel(self)
-        self.main_text.setText("Pipeline: ")
+        self.main_text.setText("Pipeline: ->")
         self.main_text.move(50, 75)
         self.main_text.setStyleSheet(
             "font-family: Monospac821 BC;"
@@ -142,7 +140,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.btn_reset.clicked.connect(lambda: self.reset())
 
     def reset(self):
-        self.main_text.setText("Pipeline: ")
+        self.main_text.setText("Pipeline: ->")
         self.n_btn_Pump = 0
         self.n_btn_Pipe = 0
 
@@ -152,7 +150,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         """Основная функция"""
 
     def start(self):
-        """Создаю начальные списки соростей и давлений на основе количества кликов"""
 
         def find_Jb(Davleniya, Skorosty):
             Vjb = Skorosty
@@ -169,12 +166,152 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
                 Skorosty) * T * self.c / (2 * self.d)
             return (Ja)
-        num_of_elements_in_lists = self.n_btn_Pump * 2 + self.n_btn_Pipe
+
+        def pump_method(P, V, i, a, b, number, char, t_char=0):
+            ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
+            global p_moment
+            global V_moment
+            global x
+            global xx
+            if char == 0:
+                w = self.w0
+            elif char == 1:  # Включение на tt сек
+                if t_char <= self.t <= t_char + 20:
+                    w = 150 * (self.t - t_char)
+                elif self.t < t_char:
+                    w = 0
+                else:
+                    w = 3000
+            elif char == 2:  # Выключение на ttt сек
+                if self.t < t_char:
+                    w = 3000
+                elif t_char <= self.t <= (t_char + 20):
+                    w = 3000 - 150 * (self.t - t_char)
+                else:
+                    w = 0
+            else:
+                w = 0
+
+            a = (w / self.w0) ** 2 * a  # 302.06   Характеристика насоса # b = 8 * 10 ** (-7)
+            S = np.pi * (self.d / 2) ** 2
+            if number == 0:
+                Ja = find_Ja(self.p10, 2)
+            else:
+                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
+            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2])
+            VV = (-self.c / self.g + (
+                    (self.c / self.g) ** 2 - b * (S * 3600) ** 2 * ((Jb - Ja) / (self.ro * self.g) - a)) ** 0.5) / (
+                         b * (S * 3600) ** 2)
+            p1 = (Ja - self.ro * self.c * VV) / 1000000
+            p2 = (Jb + self.ro * self.c * VV) / 1000000
+            p_moment.extend([p1, p2])
+            V_moment.extend([VV, VV])
+            xx.extend([x, x])
+            x += dx
+
+        def pipe_method(P, V, i):
+            global p_moment
+            global V_moment
+            global x
+            global xx
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1])
+            pp = (Ja + Jb) / (2 * 1000000)
+            VV = (Ja - Jb) / (2 * self.ro * self.c)
+            p_moment.append(pp)
+            V_moment.append(VV)
+            xx.append(x)
+            x += dx
+
+        def right_boundary_method(P, V, i, p_const):
+            global p_moment
+            global V_moment
+            global x
+            global xx
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
+            VV = (Ja - p_const) / (self.ro * self.c)
+            pp = p_const / 1000000
+            p_moment.append(pp)
+            V_moment.append(VV)
+            xx.append(x)
+            x += dx
+
+        def Animation(p0, V0, xx, p_ism, V_ism):
+            '''не смог разобраться в модуле анимации библиотеки матплотлиб, поэтому написал свой
+             тоже не очень важно
+            тут p_ism и v_ism это вложенный двухуровневый список, т.е. список внутри списка'''
+            plt.ion()
+            plt.style.use('seaborn-whitegrid')
+            fig = plt.figure(figsize=(7, 6))
+            ax1 = fig.add_subplot(2, 1, 1)
+            ax2 = fig.add_subplot(2, 1, 2)
+            ax1.set_xlabel('X, м')
+            ax2.set_xlabel('X, м')
+            ax1.set_ylabel('P, Мпа')
+            ax2.set_ylabel('V, м/с')
+            ax2.set_ylim(-5, 5)
+            ax1.set_ylim(-3, 7)
+
+            linep, = ax1.plot(xx, p0, c='green')
+            lineV, = ax2.plot(xx, V0)
+            t = 0
+            for i in range(self.t_rab):
+                ax1.set_title(f't = {t}')
+                linep.set_ydata(p_ism[i])
+                linep.set_xdata(xx)
+                lineV.set_ydata(V_ism[i])
+                lineV.set_xdata(xx)
+                plt.draw()
+                plt.gcf().canvas.flush_events()
+                time.sleep(0.01)
+                t += T
+            plt.ion()
+            plt.show()
+
+        '''Определение количества элементов в списках'''
+        num_of_elements_in_lists = self.n_btn_Pump * 2 + self.n_btn_Pipe * 100
+
+        '''Задание общих параметров трубопровода'''
         L = self.n_btn_Pipe * 100000 + 1000
         N = self.n_btn_Pipe * 100 + 2
-        P_0 = [0.1] * num_of_elements_in_lists
-        V_0 = P_0
-        srt_of_main_in_list = self.main_text.text().split('->')
+        T = L / (N * self.c)
+        dx = L / N
+        x = 0
+        xx = []
+        """Начальные списки соростей и давлений на основе количества кликов"""
+        P_O = [0.1] * num_of_elements_in_lists
+        V_O = P_O
+        Davleniya = [P_O]
+        Skorosty = [V_O]
+        str_of_main_in_list = self.main_text.text().split('->')
+        '''Инициализация объектов и расчет'''
+        for tr in range(self.t_rab):
+            pump_number = 0
+            iter = 0
+            p_moment = []
+            V_moment = []
+            xx = []
+            x = 0
+            for i in str_of_main_in_list:
+                if i == " Pump":
+                    pump_method(Davleniya, Skorosty, iter, 310, 8 * 10 ** (-7), pump_number, 1, 1)
+                    pump_number += 1
+                    iter += 2
+                elif i == " Pipe":
+                    for j in range(100):
+                        pipe_method(Davleniya, Skorosty, iter)
+                        iter += 1
+                else:
+                    pass
+                right_boundary_method(Davleniya, Skorosty, num_of_elements_in_lists-1, self.p20)
+            Davleniya.append(p_moment)
+            Skorosty.append(V_moment)
+            self.t=+T
+        Animation(Davleniya[0], Skorosty[0], xx, Davleniya, Skorosty)
+        print(Davleniya)
+        print(Skorosty)
+        print(str_of_main_in_list)
+
 
 
 if __name__ == "__main__":

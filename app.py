@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
+
 class initial_parameters():
     def __init__(self):
         self.p10 = 0.784800  # 100м
@@ -37,7 +38,11 @@ class Window(QMainWindow, initial_parameters):
     def __init__(self):
         super(Window, self).__init__()
         self.setWindowTitle("Mchar")
-        self.setGeometry(500, 200, 1000, 750)
+        self.setGeometry(450, 150, 1000, 750)
+        """Начальные значения счетчика кликов"""
+        self.n_btn_Pump = 0
+        self.n_btn_Pipe = 0
+
         """Основная строка трубопровода"""
         self.main_text = QtWidgets.QLabel(self)
         self.main_text.setText("Трубопровод: ")
@@ -47,18 +52,6 @@ class Window(QMainWindow, initial_parameters):
             "font-size: 19px;"
         )
         self.main_text.adjustSize()
-
-        """Кнопка выхода"""
-        self.btn_exit = QtWidgets.QPushButton(self)
-        self.btn_exit.setText("Exit")
-        self.btn_exit.move(900, 700)
-        self.btn_exit.adjustSize()
-        self.btn_exit.setStyleSheet(
-            "background-color: rgb(176, 176, 176);"
-            "font-family: Monospac821 BC;"
-            "font-size: 14px;"
-            )
-        # btn_exit.clicked.connect(app.exec_())
 
         """Кнопка добавления насоса"""
         self.btn_Pump = QtWidgets.QPushButton(self)
@@ -81,13 +74,12 @@ class Window(QMainWindow, initial_parameters):
             "font-family: Monospac821 BC;"
             "font-size: 14px;"
         )
-        self.n_btn_Pump = 0
-        self.n_btn_Pipe = 0
+
 
         '''Кнопка старт'''
         self.btn_start = QtWidgets.QPushButton(self)
         self.btn_start.setText("Start")
-        self.btn_start.move(440,660)
+        self.btn_start.move(440, 660)
         self.btn_start.setFixedSize(120, 40)
         self.btn_start.setStyleSheet(
             "background-color: rgb(255, 6, 81);"
@@ -95,10 +87,32 @@ class Window(QMainWindow, initial_parameters):
             "font-size: 20px;"
         )
 
+        """Кнопка выхода"""
+        self.btn_exit = QtWidgets.QPushButton(self)
+        self.btn_exit.setText("Exit")
+        self.btn_exit.move(900, 700)
+        self.btn_exit.setFixedSize(80, 20)
+        self.btn_exit.setStyleSheet(
+            "background-color: rgb(176, 176, 176);"
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
+        # btn_exit.clicked.connect(app.exec_())
+
+        """Кнопка обновления строки"""
+        self.btn_reset = QtWidgets.QPushButton(self)
+        self.btn_reset.setText("Reset")
+        self.btn_reset.move(800, 150)
+        self.btn_reset.setStyleSheet(
+            "background-color: rgb(176, 176, 176);"
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
         """действия кнопок"""
         self.clicked_btns_add()
-
+        self.clicked_btn_reset()
         """Кнопки добавления объектов"""
+
     def clicked_btns_add(self):
         self.btn_Pipe.clicked.connect(lambda: self.add_smth(self.btn_Pipe.text()))
         self.btn_Pump.clicked.connect(lambda: self.add_smth(self.btn_Pump.text()))
@@ -109,8 +123,14 @@ class Window(QMainWindow, initial_parameters):
             self.n_btn_Pipe += 1
         elif what_to_add == self.btn_Pump.text():
             self.n_btn_Pump += 1
-
         self.main_text.adjustSize()
+    def clicked_btn_reset(self):
+        self.btn_reset.clicked.connect(lambda: self.reset())
+    def reset(self):
+        self.main_text.setText("Трубопровод: ")
+        self.n_btn_Pump = 0
+        self.n_btn_Pipe = 0
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

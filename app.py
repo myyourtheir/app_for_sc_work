@@ -6,7 +6,7 @@ import numpy as np
 import sys
 
 
-class initial_parameters():
+class initial_parameters_and_funcrions():
     def __init__(self):
         self.p10 = 0.784800  # 100м
         self.g = 9.81
@@ -33,8 +33,35 @@ class initial_parameters():
         self.t = 0
         self.T = self.L / (self.N * self.c)
 
+    def find_lyam(self, Re, eps):
+        if Re < 2320:
+            lyam1 = 68 / Re
+        elif (10 * eps) > Re >= 2320:
+            lyam1 = 0.3164 / Re ** 0.25
+        elif (10 * eps) <= Re < (500 * self.d / self.o):
+            lyam1 = 0.11 * (eps + 68 / Re) ** 0.25
+        else:
+            lyam1 = 0.11 * (eps) ** 0.25
+        return (lyam1)
 
-class Window(QMainWindow, initial_parameters):
+    def find_Jb(self, Davleniya, Skorosty):
+        Vjb = Skorosty
+        Re = abs(Vjb) * self.d / self.v
+        lyamjb = self.find_lyam(Re, self.o / self.d)
+        Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
+            Skorosty) * self.T * self.c / (2 * self.d)
+        return (Jb)
+
+    def find_Ja(self, Davleniya, Skorosty):
+        Vja = Skorosty
+        Re = abs(Vja) * self.d / self.v
+        lyamja = self.find_lyam(Re, self.o / self.d)
+        Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
+            Skorosty) * self.T * self.c / (2 * self.d)
+        return (Ja)
+
+
+class Window(QMainWindow, initial_parameters_and_funcrions):
     def __init__(self):
         super(Window, self).__init__()
         self.setWindowTitle("Mchar")
@@ -45,7 +72,7 @@ class Window(QMainWindow, initial_parameters):
 
         """Основная строка трубопровода"""
         self.main_text = QtWidgets.QLabel(self)
-        self.main_text.setText("Трубопровод: ")
+        self.main_text.setText("Pipeline: ")
         self.main_text.move(50, 75)
         self.main_text.setStyleSheet(
             "font-family: Monospac821 BC;"
@@ -74,7 +101,6 @@ class Window(QMainWindow, initial_parameters):
             "font-family: Monospac821 BC;"
             "font-size: 14px;"
         )
-
 
         '''Кнопка старт'''
         self.btn_start = QtWidgets.QPushButton(self)
@@ -124,10 +150,12 @@ class Window(QMainWindow, initial_parameters):
         elif what_to_add == self.btn_Pump.text():
             self.n_btn_Pump += 1
         self.main_text.adjustSize()
+
     def clicked_btn_reset(self):
         self.btn_reset.clicked.connect(lambda: self.reset())
+
     def reset(self):
-        self.main_text.setText("Трубопровод: ")
+        self.main_text.setText("Pipeline: ")
         self.n_btn_Pump = 0
         self.n_btn_Pipe = 0
 

@@ -276,7 +276,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             lineV, = ax2.plot(xx, V0)
             t = 0
             for i in range(self.t_rab):
-                ax1.set_title(f't = {round(t)}')
+                ax1.set_title(f't = {round(t)} ' + 'c')
                 linep.set_ydata(p_ism[i])
                 linep.set_xdata(xx)
                 lineV.set_ydata(V_ism[i])

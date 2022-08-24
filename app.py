@@ -43,6 +43,7 @@ class initial_parameters_and_funcrions():
             lyam1 = 0.11 * (eps) ** 0.25
         return (lyam1)
 
+
 # class Canvas(FigureCanvas, initial_parameters_and_funcrions):
 #     def __init__(self):
 #         super(Canvas, self).__init__()
@@ -169,6 +170,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             self.n_btn_Pump += 1
         self.main_text.adjustSize()
         '''Кнопки управления'''
+
     def clicked_btn_reset(self):
         self.btn_reset.clicked.connect(lambda: self.reset())
 
@@ -239,7 +241,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             else:
                 return [p2, VV]
 
-
         def pipe_method(P, V, i):
 
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
@@ -247,7 +248,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             pp = (Ja + Jb) / (2 * 1000000)
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             return [pp, VV]
-
 
         def right_boundary_method(P, V, i, p_const):
 
@@ -287,8 +287,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 t += T
             plt.ion()
             plt.show()
-
-
 
         '''Определение количества элементов в списках'''
         num_of_elements_in_lists = self.n_btn_Pump * 2 + self.n_btn_Pipe * 100 + 1
@@ -336,27 +334,22 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             self.t += T
 
         '''Создание списка координат'''
-        dx = L/N
+        dx = L / N
         x = 0
         xx = []
         for i, y in enumerate(str_of_main_in_list):
             if y == 'Pump':
                 xx.extend([x, x])
-                x+= dx
+                x += dx
             elif y == 'Pipe':
                 for j in range(100):
                     xx.append(x)
                     x += dx
             elif y == '':
                 xx.append(x)
-                x+=dx
-
-
+                x += dx
 
         Animation(Davleniya[0], Skorosty[0], xx, Davleniya, Skorosty)
-
-
-
 
 
 if __name__ == "__main__":

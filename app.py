@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,8 +28,6 @@ class initial_parameters_and_funcrions():
         # self.L = self.L * 1000
         self.d = self.d / 1000
         self.o = self.o / 1000
-        self.p10 = self.p10 * 1000000
-        self.p20 = self.p20 * 1000000
         self.v = self.v / 1000000
         self.t = 0
         # self.T = self.L / (self.N * self.c)
@@ -44,6 +43,40 @@ class initial_parameters_and_funcrions():
             lyam1 = 0.11 * (eps) ** 0.25
         return (lyam1)
 
+# class Canvas(FigureCanvas, initial_parameters_and_funcrions):
+#     def __init__(self):
+#         super(Canvas, self).__init__()
+#     def Animation(self, p0, V0, xx, p_ism, V_ism):
+#         '''не смог разобраться в модуле анимации библиотеки матплотлиб, поэтому написал свой
+#          тоже не очень важно
+#         тут p_ism и v_ism это вложенный двухуровневый список, т.е. список внутри списка'''
+#         plt.ion()
+#         plt.style.use('seaborn-whitegrid')
+#         fig = plt.figure(figsize=(7, 6))
+#         ax1 = fig.add_subplot(2, 1, 1)
+#         ax2 = fig.add_subplot(2, 1, 2)
+#         ax1.set_xlabel('X, м')
+#         ax2.set_xlabel('X, м')
+#         ax1.set_ylabel('P, Мпа')
+#         ax2.set_ylabel('V, м/с')
+#         ax2.set_ylim(-5, 5)
+#         ax1.set_ylim(-3, 7)
+#
+#         linep, = ax1.plot(xx, p0, c='green')
+#         lineV, = ax2.plot(xx, V0)
+#         t = 0
+#         for i in range(self.t_rab):
+#             ax1.set_title(f't = {t}')
+#             linep.set_ydata(p_ism[i])
+#             linep.set_xdata(xx)
+#             lineV.set_ydata(V_ism[i])
+#             lineV.set_xdata(xx)
+#             plt.draw()
+#             plt.gcf().canvas.flush_events()
+#             time.sleep(0.01)
+#
+#         plt.ion()
+#         plt.show()
 
 class Window(QMainWindow, initial_parameters_and_funcrions):
     def __init__(self):
@@ -135,7 +168,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         elif what_to_add == self.btn_Pump.text():
             self.n_btn_Pump += 1
         self.main_text.adjustSize()
-
+        '''Кнопки управления'''
     def clicked_btn_reset(self):
         self.btn_reset.clicked.connect(lambda: self.reset())
 
@@ -167,12 +200,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 Skorosty) * T * self.c / (2 * self.d)
             return (Ja)
 
-        def pump_method(P, V, i, a, b, number, char, t_char=0):
+        def pump_method(P, V, i, a, b, number, char, chto_vivodim, t_char=0):
             ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
-            global p_moment
-            global V_moment
-            global x
-            global xx
+
             if char == 0:
                 w = self.w0
             elif char == 1:  # Включение на tt сек
@@ -204,37 +234,27 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                          b * (S * 3600) ** 2)
             p1 = (Ja - self.ro * self.c * VV) / 1000000
             p2 = (Jb + self.ro * self.c * VV) / 1000000
-            p_moment.extend([p1, p2])
-            V_moment.extend([VV, VV])
-            xx.extend([x, x])
-            x += dx
+            if chto_vivodim == 1:
+                return [p1, VV]
+            else:
+                return [p2, VV]
+
 
         def pipe_method(P, V, i):
-            global p_moment
-            global V_moment
-            global x
-            global xx
+
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
             Jb = find_Jb(P[-1][i + 1], V[-1][i + 1])
             pp = (Ja + Jb) / (2 * 1000000)
             VV = (Ja - Jb) / (2 * self.ro * self.c)
-            p_moment.append(pp)
-            V_moment.append(VV)
-            xx.append(x)
-            x += dx
+            return [pp, VV]
+
 
         def right_boundary_method(P, V, i, p_const):
-            global p_moment
-            global V_moment
-            global x
-            global xx
+
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
             VV = (Ja - p_const) / (self.ro * self.c)
             pp = p_const / 1000000
-            p_moment.append(pp)
-            V_moment.append(VV)
-            xx.append(x)
-            x += dx
+            return [pp, VV]
 
         def Animation(p0, V0, xx, p_ism, V_ism):
             '''не смог разобраться в модуле анимации библиотеки матплотлиб, поэтому написал свой
@@ -256,7 +276,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             lineV, = ax2.plot(xx, V0)
             t = 0
             for i in range(self.t_rab):
-                ax1.set_title(f't = {t}')
+                ax1.set_title(f't = {round(t)}')
                 linep.set_ydata(p_ism[i])
                 linep.set_xdata(xx)
                 lineV.set_ydata(V_ism[i])
@@ -268,16 +288,15 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             plt.ion()
             plt.show()
 
+
+
         '''Определение количества элементов в списках'''
-        num_of_elements_in_lists = self.n_btn_Pump * 2 + self.n_btn_Pipe * 100
+        num_of_elements_in_lists = self.n_btn_Pump * 2 + self.n_btn_Pipe * 100 + 1
 
         '''Задание общих параметров трубопровода'''
         L = self.n_btn_Pipe * 100000 + 1000
         N = self.n_btn_Pipe * 100 + 2
         T = L / (N * self.c)
-        dx = L / N
-        x = 0
-        xx = []
         """Начальные списки соростей и давлений на основе количества кликов"""
         P_O = [0.1] * num_of_elements_in_lists
         V_O = P_O
@@ -288,29 +307,55 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         for tr in range(self.t_rab):
             pump_number = 0
             iter = 0
-            p_moment = []
-            V_moment = []
-            xx = []
-            x = 0
-            for i in str_of_main_in_list:
-                if i == " Pump":
-                    pump_method(Davleniya, Skorosty, iter, 310, 8 * 10 ** (-7), pump_number, 1, 1)
+            main = []
+            for i, x in enumerate(str_of_main_in_list):
+                if x == 'Pump':
+                    main.append(pump_method(Davleniya, Skorosty, iter, 310, 8 * 10 ** (-7), pump_number, 1, 1, 1))
+                    main.append(pump_method(Davleniya, Skorosty, iter, 310, 8 * 10 ** (-7), pump_number, 1, 2, 1))
                     pump_number += 1
                     iter += 2
-                elif i == " Pipe":
+                elif x == 'Pipe':
                     for j in range(100):
-                        pipe_method(Davleniya, Skorosty, iter)
+                        main.append(pipe_method(Davleniya, Skorosty, iter))
                         iter += 1
-                else:
-                    pass
-                right_boundary_method(Davleniya, Skorosty, num_of_elements_in_lists-1, self.p20)
+                elif x == '':
+                    main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20))
+            '''Распаковка main'''
+
+            # По давлению
+            p_moment = []
+            for i in range(len(main)):
+                p_moment.append(main[i][0])
             Davleniya.append(p_moment)
+
+            # По скорости
+            V_moment = []
+            for i in range(len(main)):
+                V_moment.append(main[i][1])
             Skorosty.append(V_moment)
-            self.t=+T
+            self.t += T
+
+        '''Создание списка координат'''
+        dx = L/N
+        x = 0
+        xx = []
+        for i, y in enumerate(str_of_main_in_list):
+            if y == 'Pump':
+                xx.extend([x, x])
+                x+= dx
+            elif y == 'Pipe':
+                for j in range(100):
+                    xx.append(x)
+                    x += dx
+            elif y == '':
+                xx.append(x)
+                x+=dx
+
+
+
         Animation(Davleniya[0], Skorosty[0], xx, Davleniya, Skorosty)
-        print(Davleniya)
-        print(Skorosty)
-        print(str_of_main_in_list)
+
+
 
 
 

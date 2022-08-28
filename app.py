@@ -44,40 +44,6 @@ class initial_parameters_and_funcrions():
         return (lyam1)
 
 
-# class Canvas(FigureCanvas, initial_parameters_and_funcrions):
-#     def __init__(self):
-#         super(Canvas, self).__init__()
-#     def Animation(self, p0, V0, xx, p_ism, V_ism):
-#         '''не смог разобраться в модуле анимации библиотеки матплотлиб, поэтому написал свой
-#          тоже не очень важно
-#         тут p_ism и v_ism это вложенный двухуровневый список, т.е. список внутри списка'''
-#         plt.ion()
-#         plt.style.use('seaborn-whitegrid')
-#         fig = plt.figure(figsize=(7, 6))
-#         ax1 = fig.add_subplot(2, 1, 1)
-#         ax2 = fig.add_subplot(2, 1, 2)
-#         ax1.set_xlabel('X, м')
-#         ax2.set_xlabel('X, м')
-#         ax1.set_ylabel('P, Мпа')
-#         ax2.set_ylabel('V, м/с')
-#         ax2.set_ylim(-5, 5)
-#         ax1.set_ylim(-3, 7)
-#
-#         linep, = ax1.plot(xx, p0, c='green')
-#         lineV, = ax2.plot(xx, V0)
-#         t = 0
-#         for i in range(self.t_rab):
-#             ax1.set_title(f't = {t}')
-#             linep.set_ydata(p_ism[i])
-#             linep.set_xdata(xx)
-#             lineV.set_ydata(V_ism[i])
-#             lineV.set_xdata(xx)
-#             plt.draw()
-#             plt.gcf().canvas.flush_events()
-#             time.sleep(0.01)
-#
-#         plt.ion()
-#         plt.show()
 
 class Window(QMainWindow, initial_parameters_and_funcrions):
     def __init__(self):

@@ -1,5 +1,7 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QMessageBox
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import time
 import matplotlib.pyplot as plt
@@ -131,6 +133,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
     def add_smth(self, what_to_add):
         self.main_text.setText(self.main_text.text() + what_to_add + "->")
         if what_to_add == self.btn_Pipe.text():
+            pipe_par_window = QMessageBox()
+            pipe_par_window.setWindowTitle("Параметры трубопровода")
+            pipe_par_window.setGeometry(850, 525, 300, 200)
+            pipe_par_window.setText('Укажите длину трубопровода')
+            sld = QtWidgets.QSlider(QtCore.Qt.Horizontal, pipe_par_window)
+
+
+            pipe_par_window.exec_()
             self.n_btn_Pipe += 1
         elif what_to_add == self.btn_Pump.text():
             self.n_btn_Pump += 1

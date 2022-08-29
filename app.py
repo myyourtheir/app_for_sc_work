@@ -49,7 +49,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         """Начальные значения счетчика кликов"""
         self.n_btn_Pump = 0
         self.n_btn_Pipe = 0
-
+        self.n_btn_Gate_Valve = 0
         """Основная строка трубопровода"""
         self.main_text = QtWidgets.QLabel(self)
         self.main_text.setText("Pipeline: ->")
@@ -81,7 +81,16 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             "font-family: Monospac821 BC;"
             "font-size: 14px;"
         )
-
+        ''' Кнопка добавления задвижки'''
+        self.btn_Gate_Valve = QtWidgets.QPushButton(self)
+        self.btn_Gate_Valve.setText("Gate Valve")
+        self.btn_Gate_Valve.move(390, 450)
+        self.btn_Gate_Valve.setFixedSize(120, 40)
+        self.btn_Gate_Valve.setStyleSheet(
+            "background-color: rgb(170, 85, 255);"
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
         '''Кнопка старт'''
         self.btn_start = QtWidgets.QPushButton(self)
         self.btn_start.setText("Start")
@@ -122,17 +131,20 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         '''Списки параметров для объектов'''
         self.pipe_par = []
         self.pump_par = []
+
         """Кнопки добавления объектов"""
 
     def clicked_btns_add(self):
         self.btn_Pipe.clicked.connect(lambda: self.add_smth(self.btn_Pipe.text()))
         self.btn_Pump.clicked.connect(lambda: self.add_smth(self.btn_Pump.text()))
+        self.btn_Gate_Valve.clicked.connect(lambda: self.add_smth(self.btn_Gate_Valve.text()))
 
     def add_smth(self, what_to_add):
 
         if what_to_add == self.btn_Pipe.text():
             def add_pipeline_len_In_pipe_par_window():
                 self.pipe_par.append(int(self.len_of_pipe.text()))
+
             pipe_par_window = QMessageBox()
             pipe_par_window.setWindowTitle("Выбор параметров трубопровода")
             pipe_par_window.setText('Укажите длину трубопровода в км')
@@ -144,7 +156,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             self.n_btn_Pipe += 1
             self.main_text.setText(self.main_text.text() + what_to_add + "->")
         elif what_to_add == self.btn_Pump.text():
-            self.pump_par_moment =[]
+            self.pump_par_moment = []
+
             def add_pump_par():
                 self.pump_par_moment.append(float(edit_a.text()))
                 self.pump_par_moment.append(float(edit_b.text()))
@@ -158,7 +171,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 self.pump_par.append(self.pump_par_moment)
                 self.main_text.setText(self.main_text.text() + what_to_add + "->")
                 pump_par_window.close()
-
 
             pump_par_window = QDialog()
             pump_par_window.setWindowTitle("Выбор параметров насоса")
@@ -203,6 +215,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             pump_par_window.exec_()
             self.n_btn_Pump += 1
 
+        elif what_to_add == self.btn_Gate_Valve.text():
+            self.main_text.setText(self.main_text.text() + what_to_add + "->")
+            self.n_btn_Gate_Valve += 1
         self.main_text.adjustSize()
         '''Кнопки управления'''
 
@@ -284,22 +299,20 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             return [pp, VV]
 
+        def gate_valve_method(P, V, i, chto_vivodim):
 
-
-        def gate_valve(P, V, i, chto_vivodim):
-
-            zet = 0 #тут должна быть функция определения местного сопротивления
+            zet = 10**7  # тут должна быть функция определения местного сопротивления
 
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2])
-            VV = (-2 * self.c * self.ro  + (4 * self.ro**2 * self.c**2 - 2 * zet * self.ro *(Jb - Ja))**0.5)/(zet * self.ro)
+            VV = (-2 * self.c * self.ro + (4 * self.ro ** 2 * self.c ** 2 - 2 * zet * self.ro * (Jb - Ja)) ** 0.5) / (
+                        zet * self.ro)
             p1 = (Ja - self.ro * self.c * VV) / 1000000
             p2 = (Jb + self.ro * self.c * VV) / 1000000
             if chto_vivodim == 1:
                 return [p1, VV]
             else:
                 return [p2, VV]
-
 
         def right_boundary_method(P, V, i, p_const):
 
@@ -348,7 +361,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             num_of_elements_in_lists += self.pipe_par[i]
             L += self.pipe_par[i] * 1000
             N += self.pipe_par[i]
-        num_of_elements_in_lists += self.n_btn_Pump * 2 + 1
+        num_of_elements_in_lists += self.n_btn_Pump * 2 + 1 + self.n_btn_Gate_Valve * 2
         L += 1000
         N += 2
         '''Задание общих параметров трубопровода'''
@@ -368,8 +381,12 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             count_pipe_iter = 0
             for i, x in enumerate(str_of_main_in_list):
                 if x == 'Pump':
-                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0], self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2], 1, self.pump_par[pump_number][3]))
-                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0], self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2], 2, self.pump_par[pump_number][3]))
+                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0],
+                                            self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2],
+                                            1, self.pump_par[pump_number][3]))
+                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0],
+                                            self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2],
+                                            2, self.pump_par[pump_number][3]))
                     pump_number += 1
                     iter += 2
                 elif x == 'Pipe':
@@ -377,6 +394,10 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                         main.append(pipe_method(Davleniya, Skorosty, iter))
                         iter += 1
                     count_pipe_iter += 1
+                elif x == 'Gate Valve':
+                    main.append(gate_valve_method(Davleniya, Skorosty, iter, 1))
+                    main.append(gate_valve_method(Davleniya, Skorosty, iter, 2))
+                    iter += 2
                 elif x == '':
                     main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20))
 
@@ -409,6 +430,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     xx.append(x)
                     x += dx
                 count_pipe_iter += 1
+            elif y== 'Gate Valve':
+                xx.extend([x, x])
+                x += dx
             elif y == '':
                 xx.append(x)
                 x += dx

@@ -284,6 +284,23 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             return [pp, VV]
 
+
+
+        def gate_valve(P, V, i, chto_vivodim):
+
+            zet = 0 #тут должна быть функция определения местного сопротивления
+
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
+            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2])
+            VV = (-2 * self.c * self.ro  + (4 * self.ro**2 * self.c**2 - 2 * zet * self.ro *(Jb - Ja))**0.5)/(zet * self.ro)
+            p1 = (Ja - self.ro * self.c * VV) / 1000000
+            p2 = (Jb + self.ro * self.c * VV) / 1000000
+            if chto_vivodim == 1:
+                return [p1, VV]
+            else:
+                return [p2, VV]
+
+
         def right_boundary_method(P, V, i, p_const):
 
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])

@@ -129,12 +129,10 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.btn_Pump.clicked.connect(lambda: self.add_smth(self.btn_Pump.text()))
 
     def add_smth(self, what_to_add):
-        self.main_text.setText(self.main_text.text() + what_to_add + "->")
-
-        def add_pipeline_len_In_pipe_par_window():
-            self.pipe_par.append(int(self.len_of_pipe.text()))
 
         if what_to_add == self.btn_Pipe.text():
+            def add_pipeline_len_In_pipe_par_window():
+                self.pipe_par.append(int(self.len_of_pipe.text()))
             pipe_par_window = QMessageBox()
             pipe_par_window.setWindowTitle("Выбор параметров трубопровода")
             pipe_par_window.setText('Укажите длину трубопровода в км')
@@ -144,7 +142,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             pipe_par_window.buttonClicked.connect(add_pipeline_len_In_pipe_par_window)
             pipe_par_window.exec_()
             self.n_btn_Pipe += 1
-
+            self.main_text.setText(self.main_text.text() + what_to_add + "->")
         elif what_to_add == self.btn_Pump.text():
             self.pump_par_moment =[]
             def add_pump_par():
@@ -154,8 +152,13 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     self.pump_par_moment.append(1)
                 elif rad_vikl.isChecked():
                     self.pump_par_moment.append(2)
+                else:
+                    self.pump_par_moment.append(0)
                 self.pump_par_moment.append(int(edit_time.text()))
+                self.pump_par.append(self.pump_par_moment)
                 self.main_text.setText(self.main_text.text() + what_to_add + "->")
+                pump_par_window.close()
+
 
             pump_par_window = QDialog()
             pump_par_window.setWindowTitle("Выбор параметров насоса")
@@ -172,7 +175,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             lbl_b.setText("Укажите параметр b:")
             edit_b = QtWidgets.QLineEdit(pump_par_window)
             edit_b.move(10, 80)
-            edit_b.setText("8 * 10 ** (-7)")
+            edit_b.setText("0.0000008")
             lbl_char = QtWidgets.QLabel(pump_par_window)
             lbl_char.setText("Выберите характер работы насоса:")
             lbl_char.move(10, 110)
@@ -181,6 +184,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             hlayout_for_radio_buttons = QtWidgets.QHBoxLayout(gr_box)
             rad_vkl = QtWidgets.QRadioButton()
             rad_vkl.setText("Вкл")
+            rad_vkl.isChecked()
             rad_vikl = QtWidgets.QRadioButton()
             rad_vikl.setText("Выкл")
             hlayout_for_radio_buttons.addWidget(rad_vkl)
@@ -196,9 +200,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             btn_ok_pump.setText("Ok")
             btn_ok_pump.move(100, 230)
             btn_ok_pump.clicked.connect(add_pump_par)
-
             pump_par_window.exec_()
             self.n_btn_Pump += 1
+
         self.main_text.adjustSize()
         '''Кнопки управления'''
 
@@ -347,8 +351,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             count_pipe_iter = 0
             for i, x in enumerate(str_of_main_in_list):
                 if x == 'Pump':
-                    main.append(pump_method(Davleniya, Skorosty, iter, 310, 8 * 10 ** (-7), pump_number, 1, 1, 1))
-                    main.append(pump_method(Davleniya, Skorosty, iter, 310, 8 * 10 ** (-7), pump_number, 1, 2, 1))
+                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0], self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2], 1, self.pump_par[pump_number][3]))
+                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0], self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2], 2, self.pump_par[pump_number][3]))
                     pump_number += 1
                     iter += 2
                 elif x == 'Pipe':

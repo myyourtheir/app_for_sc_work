@@ -46,7 +46,6 @@ class initial_parameters_and_funcrions():
         return (lyam1)
 
 
-
 class Window(QMainWindow, initial_parameters_and_funcrions):
     def __init__(self):
         super(Window, self).__init__()
@@ -124,6 +123,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.clicked_btns_add()
         self.clicked_btn_reset()
         self.clicked_btn_start()
+
+        '''Списки параметров для объектов'''
+        self.pipe_par = []
         """Кнопки добавления объектов"""
 
     def clicked_btns_add(self):
@@ -132,14 +134,19 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
     def add_smth(self, what_to_add):
         self.main_text.setText(self.main_text.text() + what_to_add + "->")
+
+        def add_pipeline_len_In_pipe_par_window():
+            self.pipe_par.append(int(self.len_of_pipe.text()))
+
         if what_to_add == self.btn_Pipe.text():
             pipe_par_window = QMessageBox()
-            pipe_par_window.setWindowTitle("Параметры трубопровода")
-            pipe_par_window.setGeometry(850, 525, 300, 200)
-            pipe_par_window.setText('Укажите длину трубопровода')
-            sld = QtWidgets.QSlider(QtCore.Qt.Horizontal, pipe_par_window)
-
-
+            pipe_par_window.setWindowTitle("Выбор параметров")
+            pipe_par_window.setFixedSize(500, 200)
+            pipe_par_window.setText('Укажите длину трубопровода в км')
+            self.len_of_pipe = QtWidgets.QLineEdit(pipe_par_window)
+            self.len_of_pipe.move(12, 35)
+            self.len_of_pipe.setText('100')
+            pipe_par_window.buttonClicked.connect(add_pipeline_len_In_pipe_par_window)
             pipe_par_window.exec_()
             self.n_btn_Pipe += 1
         elif what_to_add == self.btn_Pump.text():
@@ -265,11 +272,18 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             plt.show()
 
         '''Определение количества элементов в списках'''
-        num_of_elements_in_lists = self.n_btn_Pump * 2 + self.n_btn_Pipe * 100 + 1
-
+        L = 0
+        N = 0
+        num_of_elements_in_lists = 0
+        for i in range(len(self.pipe_par)):
+            num_of_elements_in_lists += self.pipe_par[i]
+            L += self.pipe_par[i] * 1000
+            N += self.pipe_par[i]
+        num_of_elements_in_lists += self.n_btn_Pump * 2 + 1
+        L += 1000
+        N += 2
         '''Задание общих параметров трубопровода'''
-        L = self.n_btn_Pipe * 100000 + 1000
-        N = self.n_btn_Pipe * 100 + 2
+
         T = L / (N * self.c)
         """Начальные списки соростей и давлений на основе количества кликов"""
         P_O = [0.1] * num_of_elements_in_lists
@@ -282,6 +296,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             pump_number = 0
             iter = 0
             main = []
+            count_pipe_iter = 0
             for i, x in enumerate(str_of_main_in_list):
                 if x == 'Pump':
                     main.append(pump_method(Davleniya, Skorosty, iter, 310, 8 * 10 ** (-7), pump_number, 1, 1, 1))
@@ -289,11 +304,13 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     pump_number += 1
                     iter += 2
                 elif x == 'Pipe':
-                    for j in range(100):
+                    for j in range(self.pipe_par[count_pipe_iter]):
                         main.append(pipe_method(Davleniya, Skorosty, iter))
                         iter += 1
+                    count_pipe_iter += 1
                 elif x == '':
                     main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20))
+
             '''Распаковка main'''
 
             # По давлению
@@ -313,17 +330,20 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         dx = L / N
         x = 0
         xx = []
+        count_pipe_iter = 0
         for i, y in enumerate(str_of_main_in_list):
             if y == 'Pump':
                 xx.extend([x, x])
                 x += dx
             elif y == 'Pipe':
-                for j in range(100):
+                for j in range((self.pipe_par[count_pipe_iter])):
                     xx.append(x)
                     x += dx
+                count_pipe_iter += 1
             elif y == '':
                 xx.append(x)
                 x += dx
+
 
         Animation(Davleniya[0], Skorosty[0], xx, Davleniya, Skorosty)
 

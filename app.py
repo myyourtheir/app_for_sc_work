@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QDialog
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import time
@@ -22,12 +22,7 @@ class initial_parameters_and_funcrions():
         self.v = 10
         self.t_rab = 1000  # Время работы
         self.w0 = 3000
-        # self.n = 2  # кол-во участков
-        # self.N = 100 * self.n + 1  # Количество сечений
-        # self.L = 100 * self.n + 1  # 1 - краевое условие
-
         # Перевод в систему си
-        # self.L = self.L * 1000
         self.d = self.d / 1000
         self.o = self.o / 1000
         self.v = self.v / 1000000
@@ -126,6 +121,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         '''Списки параметров для объектов'''
         self.pipe_par = []
+        self.pump_par = []
         """Кнопки добавления объектов"""
 
     def clicked_btns_add(self):
@@ -140,8 +136,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         if what_to_add == self.btn_Pipe.text():
             pipe_par_window = QMessageBox()
-            pipe_par_window.setWindowTitle("Выбор параметров")
-            pipe_par_window.setFixedSize(500, 200)
+            pipe_par_window.setWindowTitle("Выбор параметров трубопровода")
             pipe_par_window.setText('Укажите длину трубопровода в км')
             self.len_of_pipe = QtWidgets.QLineEdit(pipe_par_window)
             self.len_of_pipe.move(12, 35)
@@ -149,7 +144,60 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             pipe_par_window.buttonClicked.connect(add_pipeline_len_In_pipe_par_window)
             pipe_par_window.exec_()
             self.n_btn_Pipe += 1
+
         elif what_to_add == self.btn_Pump.text():
+            self.pump_par_moment =[]
+            def add_pump_par():
+                self.pump_par_moment.append(float(edit_a.text()))
+                self.pump_par_moment.append(float(edit_b.text()))
+                if rad_vkl.isChecked():
+                    self.pump_par_moment.append(1)
+                elif rad_vikl.isChecked():
+                    self.pump_par_moment.append(2)
+                self.pump_par_moment.append(int(edit_time.text()))
+                self.main_text.setText(self.main_text.text() + what_to_add + "->")
+
+            pump_par_window = QDialog()
+            pump_par_window.setWindowTitle("Выбор параметров насоса")
+            pump_par_window.setFixedSize(200, 270)
+            lbl_a = QtWidgets.QLabel(pump_par_window)
+            lbl_a.move(10, 10)
+            lbl_a.setText("Укажите параметр а:")
+            lbl_a.adjustSize()
+            edit_a = QtWidgets.QLineEdit(pump_par_window)
+            edit_a.move(10, 30)
+            edit_a.setText("310")
+            lbl_b = QtWidgets.QLabel(pump_par_window)
+            lbl_b.move(10, 60)
+            lbl_b.setText("Укажите параметр b:")
+            edit_b = QtWidgets.QLineEdit(pump_par_window)
+            edit_b.move(10, 80)
+            edit_b.setText("8 * 10 ** (-7)")
+            lbl_char = QtWidgets.QLabel(pump_par_window)
+            lbl_char.setText("Выберите характер работы насоса:")
+            lbl_char.move(10, 110)
+            gr_box = QtWidgets.QGroupBox(pump_par_window)
+            gr_box.move(10, 130)
+            hlayout_for_radio_buttons = QtWidgets.QHBoxLayout(gr_box)
+            rad_vkl = QtWidgets.QRadioButton()
+            rad_vkl.setText("Вкл")
+            rad_vikl = QtWidgets.QRadioButton()
+            rad_vikl.setText("Выкл")
+            hlayout_for_radio_buttons.addWidget(rad_vkl)
+            hlayout_for_radio_buttons.addWidget(rad_vikl)
+            lbl_time = QtWidgets.QLabel(pump_par_window)
+            lbl_time.setText("Укажите время вкл/выкл в сек:")
+            lbl_time.move(10, 180)
+            edit_time = QtWidgets.QLineEdit(pump_par_window)
+            edit_time.move(10, 200)
+            edit_time.setText("0")
+            btn_ok_pump = QtWidgets.QPushButton(pump_par_window)
+            # btn_ok_pump.setFixedSize()
+            btn_ok_pump.setText("Ok")
+            btn_ok_pump.move(100, 230)
+            btn_ok_pump.clicked.connect(add_pump_par)
+
+            pump_par_window.exec_()
             self.n_btn_Pump += 1
         self.main_text.adjustSize()
         '''Кнопки управления'''
@@ -292,7 +340,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         Skorosty = [V_O]
         str_of_main_in_list = self.main_text.text().split('->')
         '''Инициализация объектов и расчет'''
-        for tr in range(self.t_rab):
+        while self.t <= self.t_rab:
             pump_number = 0
             iter = 0
             main = []
@@ -343,7 +391,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             elif y == '':
                 xx.append(x)
                 x += dx
-
 
         Animation(Davleniya[0], Skorosty[0], xx, Davleniya, Skorosty)
 

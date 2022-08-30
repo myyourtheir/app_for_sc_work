@@ -1,8 +1,8 @@
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWidgets import QMessageBox, QDialog
+from PyQt5.QtWidgets import  QDialog
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -131,30 +131,48 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         '''Списки параметров для объектов'''
         self.pipe_par = []
         self.pump_par = []
-
+        self.main_text_backend = []
         """Кнопки добавления объектов"""
 
     def clicked_btns_add(self):
-        self.btn_Pipe.clicked.connect(lambda: self.add_smth(self.btn_Pipe.text()))
-        self.btn_Pump.clicked.connect(lambda: self.add_smth(self.btn_Pump.text()))
-        self.btn_Gate_Valve.clicked.connect(lambda: self.add_smth(self.btn_Gate_Valve.text()))
+        self.btn_Pipe.clicked.connect(lambda: self.add_smth('Pipe'))
+        self.btn_Pump.clicked.connect(lambda: self.add_smth('Pump'))
+        self.btn_Gate_Valve.clicked.connect(lambda: self.add_smth('Gate Valve'))
 
     def add_smth(self, what_to_add):
 
         if what_to_add == self.btn_Pipe.text():
+            self.pipe_par_moment = []
             def add_pipeline_len_In_pipe_par_window():
-                self.pipe_par.append(int(self.len_of_pipe.text()))
-
-            pipe_par_window = QMessageBox()
+                self.pipe_par_moment.append(int(edit_L.text()))
+                self.pipe_par_moment.append(int(edit_d.text())/1000)
+                self.pipe_par.append(self.pipe_par_moment)
+                self.main_text.setText(self.main_text.text() + what_to_add + "->")
+                self.main_text_backend.append(what_to_add)
+                self.n_btn_Pipe += 1
+                pipe_par_window.close()
+            pipe_par_window = QDialog()
             pipe_par_window.setWindowTitle("Выбор параметров трубопровода")
-            pipe_par_window.setText('Укажите длину трубопровода в км')
-            self.len_of_pipe = QtWidgets.QLineEdit(pipe_par_window)
-            self.len_of_pipe.move(12, 35)
-            self.len_of_pipe.setText('100')
-            pipe_par_window.buttonClicked.connect(add_pipeline_len_In_pipe_par_window)
+            pipe_par_window.setFixedSize(210, 150)
+            lbl_L = QtWidgets.QLabel(pipe_par_window)
+            lbl_L.setText('Укажите длину трубопровода в км:')
+            lbl_L.move(10, 10)
+            edit_L = QtWidgets.QLineEdit(pipe_par_window)
+            edit_L.setText("100")
+            edit_L.move(10, 30)
+            lbl_d = QtWidgets.QLabel(pipe_par_window)
+            lbl_d.setText("Укажите диаметр трубопровода в мм: ")
+            lbl_d.move(10, 60)
+            edit_d = QtWidgets.QLineEdit(pipe_par_window)
+            edit_d.setText('1000')
+            edit_d.move(10, 80)
+            btn_ok = QtWidgets.QPushButton(pipe_par_window)
+            btn_ok.setText('Ok')
+            btn_ok.move(100, 120)
+            btn_ok.clicked.connect(add_pipeline_len_In_pipe_par_window)
             pipe_par_window.exec_()
-            self.n_btn_Pipe += 1
-            self.main_text.setText(self.main_text.text() + what_to_add + "->")
+
+
         elif what_to_add == self.btn_Pump.text():
             self.pump_par_moment = []
 
@@ -170,6 +188,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 self.pump_par_moment.append(int(edit_time.text()))
                 self.pump_par.append(self.pump_par_moment)
                 self.main_text.setText(self.main_text.text() + what_to_add + "->")
+                self.main_text_backend.append(what_to_add)
+                self.n_btn_Pump += 1
                 pump_par_window.close()
 
             pump_par_window = QDialog()
@@ -213,10 +233,11 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             btn_ok_pump.move(100, 230)
             btn_ok_pump.clicked.connect(add_pump_par)
             pump_par_window.exec_()
-            self.n_btn_Pump += 1
+
 
         elif what_to_add == self.btn_Gate_Valve.text():
             self.main_text.setText(self.main_text.text() + what_to_add + "->")
+            self.main_text_backend.append(what_to_add)
             self.n_btn_Gate_Valve += 1
         self.main_text.adjustSize()
         '''Кнопки управления'''
@@ -251,6 +272,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
                 Skorosty) * T * self.c / (2 * self.d)
             return (Ja)
+
+
 
         def pump_method(P, V, i, a, b, number, char, chto_vivodim, t_char=0):
             ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
@@ -290,6 +313,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 return [p1, VV]
             else:
                 return [p2, VV]
+
 
         def pipe_method(P, V, i):
 
@@ -358,9 +382,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         N = 0
         num_of_elements_in_lists = 0
         for i in range(len(self.pipe_par)):
-            num_of_elements_in_lists += self.pipe_par[i]
-            L += self.pipe_par[i] * 1000
-            N += self.pipe_par[i]
+            num_of_elements_in_lists += self.pipe_par[i][0]
+            L += self.pipe_par[i][0] * 1000
+            N += self.pipe_par[i][0]
         num_of_elements_in_lists += self.n_btn_Pump * 2 + 1 + self.n_btn_Gate_Valve * 2
         L += 1000
         N += 2
@@ -372,14 +396,15 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         V_O = P_O
         Davleniya = [P_O]
         Skorosty = [V_O]
-        str_of_main_in_list = self.main_text.text().split('->')
+
         '''Инициализация объектов и расчет'''
+        self.main_text_backend.append('')
         while self.t <= self.t_rab:
             pump_number = 0
             iter = 0
             main = []
             count_pipe_iter = 0
-            for i, x in enumerate(str_of_main_in_list):
+            for i, x in enumerate(self.main_text_backend):
                 if x == 'Pump':
                     main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0],
                                             self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2],
@@ -390,7 +415,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     pump_number += 1
                     iter += 2
                 elif x == 'Pipe':
-                    for j in range(self.pipe_par[count_pipe_iter]):
+                    for j in range(self.pipe_par[count_pipe_iter][0]):
                         main.append(pipe_method(Davleniya, Skorosty, iter))
                         iter += 1
                     count_pipe_iter += 1
@@ -421,12 +446,12 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         x = 0
         xx = []
         count_pipe_iter = 0
-        for i, y in enumerate(str_of_main_in_list):
+        for i, y in enumerate(self.main_text_backend):
             if y == 'Pump':
                 xx.extend([x, x])
                 x += dx
             elif y == 'Pipe':
-                for j in range((self.pipe_par[count_pipe_iter])):
+                for j in range((self.pipe_par[count_pipe_iter][0])):
                     xx.append(x)
                     x += dx
                 count_pipe_iter += 1

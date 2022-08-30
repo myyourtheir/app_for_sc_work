@@ -387,7 +387,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 elif 80 <= nu < 85:
                     zet = (6000 - 2500) / 10 * nu + 2500
                 else:  # 85 <= nu <= 100:
-                    zet = (1000000 - 6000) / 15 + 6000
+                    zet = (100000000 - 6000) / 15 + 6000
                 return zet
 
             if char == 0:
@@ -462,7 +462,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 lineV.set_xdata(xx)
                 plt.draw()
                 plt.gcf().canvas.flush_events()
-                time.sleep(0.1)
+                time.sleep(0.01)
                 t += T
             plt.ion()
             plt.show()

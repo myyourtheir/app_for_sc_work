@@ -131,6 +131,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         '''Списки параметров для объектов'''
         self.pipe_par = []
         self.pump_par = []
+        self.tap_par = []
         self.main_text_backend = []
         """Кнопки добавления объектов"""
 
@@ -181,13 +182,13 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             def add_pump_par():
                 self.pump_par_moment.append(float(edit_a.text()))
                 self.pump_par_moment.append(float(edit_b.text()))
-                if rad_vkl.isChecked():
+                if rad_vkl_p.isChecked():
                     self.pump_par_moment.append(1)
-                elif rad_vikl.isChecked():
+                elif rad_vikl_p.isChecked():
                     self.pump_par_moment.append(2)
                 else:
                     self.pump_par_moment.append(0)
-                self.pump_par_moment.append(int(edit_time.text()))
+                self.pump_par_moment.append(int(edit_time_p.text()))
                 self.pump_par.append(self.pump_par_moment)
                 self.main_text.setText(self.main_text.text() + what_to_add + "->")
                 self.main_text_backend.append(what_to_add)
@@ -210,25 +211,25 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             edit_b = QtWidgets.QLineEdit(pump_par_window)
             edit_b.move(10, 80)
             edit_b.setText("0.0000008")
-            lbl_char = QtWidgets.QLabel(pump_par_window)
-            lbl_char.setText("Выберите характер работы насоса:")
-            lbl_char.move(10, 110)
+            lbl_char_p = QtWidgets.QLabel(pump_par_window)
+            lbl_char_p.setText("Выберите характер работы насоса:")
+            lbl_char_p.move(10, 110)
             gr_box = QtWidgets.QGroupBox(pump_par_window)
             gr_box.move(10, 130)
             hlayout_for_radio_buttons = QtWidgets.QHBoxLayout(gr_box)
-            rad_vkl = QtWidgets.QRadioButton()
-            rad_vkl.setText("Вкл")
-            rad_vkl.isChecked()
-            rad_vikl = QtWidgets.QRadioButton()
-            rad_vikl.setText("Выкл")
-            hlayout_for_radio_buttons.addWidget(rad_vkl)
-            hlayout_for_radio_buttons.addWidget(rad_vikl)
-            lbl_time = QtWidgets.QLabel(pump_par_window)
-            lbl_time.setText("Укажите время вкл/выкл в сек:")
-            lbl_time.move(10, 180)
-            edit_time = QtWidgets.QLineEdit(pump_par_window)
-            edit_time.move(10, 200)
-            edit_time.setText("0")
+            rad_vkl_p = QtWidgets.QRadioButton()
+            rad_vkl_p.setText("Вкл")
+            rad_vkl_p.isChecked()
+            rad_vikl_p = QtWidgets.QRadioButton()
+            rad_vikl_p.setText("Выкл")
+            hlayout_for_radio_buttons.addWidget(rad_vkl_p)
+            hlayout_for_radio_buttons.addWidget(rad_vikl_p)
+            lbl_time_p = QtWidgets.QLabel(pump_par_window)
+            lbl_time_p.setText("Укажите время вкл/выкл в сек:")
+            lbl_time_p.move(10, 180)
+            edit_time_p = QtWidgets.QLineEdit(pump_par_window)
+            edit_time_p.move(10, 200)
+            edit_time_p.setText("0")
             btn_ok_pump = QtWidgets.QPushButton(pump_par_window)
             # btn_ok_pump.setFixedSize()
             btn_ok_pump.setText("Ok")
@@ -238,9 +239,49 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
 
         elif what_to_add == self.btn_Tap.text():
-            self.main_text.setText(self.main_text.text() + what_to_add + "->")
-            self.main_text_backend.append(what_to_add)
-            self.n_btn_Tap += 1
+            self.tap_par_moment = []
+
+            def add_tap_par():
+                if rad_vkl.isChecked():
+                    self.tap_par_moment.append(1)
+                elif rad_vikl.isChecked():
+                    self.tap_par_moment.append(2)
+                else:
+                    self.tap_par_moment.append(0)
+                self.tap_par_moment.append(int(edit_time_t.text()))
+                self.main_text.setText(self.main_text.text() + what_to_add + "->")
+                self.main_text_backend.append(what_to_add)
+                self.tap_par.append(self.tap_par_moment)
+                self.n_btn_Tap += 1
+                tap_par_window.close()
+            tap_par_window = QDialog()
+            tap_par_window.setWindowTitle("Выбор параметров крана")
+            tap_par_window.setFixedSize(210, 150)
+            lbl_char = QtWidgets.QLabel(tap_par_window)
+            lbl_char.setText("Выберите характер работы крана:")
+            lbl_char.move(10, 10)
+            gr_box = QtWidgets.QGroupBox(tap_par_window)
+            gr_box.move(10, 30)
+            hlayout_for_radio_buttons = QtWidgets.QHBoxLayout(gr_box)
+            rad_vkl = QtWidgets.QRadioButton()
+            rad_vkl.setText("Открытие")
+            rad_vkl.isChecked()
+            rad_vikl = QtWidgets.QRadioButton()
+            rad_vikl.setText("Закрытие")
+            hlayout_for_radio_buttons.addWidget(rad_vkl)
+            hlayout_for_radio_buttons.addWidget(rad_vikl)
+            lbl_time_t = QtWidgets.QLabel(tap_par_window)
+            lbl_time_t.setText("Укажите время откр/закр в сек:")
+            lbl_time_t.move(10, 80)
+            edit_time_t = QtWidgets.QLineEdit(tap_par_window)
+            edit_time_t.move(10, 100)
+            edit_time_t.setText("100")
+            btn_ok_tap = QtWidgets.QPushButton(tap_par_window)
+            btn_ok_tap.setText('Ok')
+            btn_ok_tap.move(115, 125)
+            btn_ok_tap.clicked.connect(add_tap_par)
+            tap_par_window.exec_()
+
         self.main_text.adjustSize()
         '''Кнопки управления'''
 
@@ -450,19 +491,20 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         '''Инициализация объектов и расчет'''
         self.main_text_backend.append('')
         while self.t <= self.t_rab:
-            pump_number = 0
+            count_pump_iter = 0
             iter = 0
             main = []
             count_pipe_iter = 0
+            count_tap_iter = 0
             for i, x in enumerate(self.main_text_backend):
                 if x == 'Pump':
-                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0],
-                                            self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2],
-                                            1, self.pipe_par[count_pipe_iter][1], self.pump_par[pump_number][3]))
-                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0],
-                                            self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2],
-                                            2, self.pipe_par[count_pipe_iter][1], self.pump_par[pump_number][3]))
-                    pump_number += 1
+                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[count_pump_iter][0],
+                                            self.pump_par[count_pump_iter][1], count_pump_iter, self.pump_par[count_pump_iter][2],
+                                            1, self.pipe_par[count_pipe_iter][1], self.pump_par[count_pump_iter][3]))
+                    main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[count_pump_iter][0],
+                                            self.pump_par[count_pump_iter][1], count_pump_iter, self.pump_par[count_pump_iter][2],
+                                            2, self.pipe_par[count_pipe_iter][1], self.pump_par[count_pump_iter][3]))
+                    count_pump_iter += 1
                     iter += 2
                 elif x == 'Pipe':
                     for j in range(self.pipe_par[count_pipe_iter][0]):
@@ -470,9 +512,10 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                         iter += 1
                     count_pipe_iter += 1
                 elif x == 'Tap':
-                    main.append(tap_method(Davleniya, Skorosty, iter, 1, 1, 200, self.pipe_par[count_pipe_iter][1]))
-                    main.append(tap_method(Davleniya, Skorosty, iter, 2, 1, 200, self.pipe_par[count_pipe_iter][1]))
+                    main.append(tap_method(Davleniya, Skorosty, iter, 1, self.tap_par[count_tap_iter][0], self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1]))
+                    main.append(tap_method(Davleniya, Skorosty, iter, 2, self.tap_par[count_tap_iter][0], self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1]))
                     iter += 2
+                    count_tap_iter+=1
                 elif x == '':
                     main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20,
                                                       self.pipe_par[count_pipe_iter - 1][1]))

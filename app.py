@@ -486,7 +486,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         V_O = P_O
         Davleniya = [P_O]
         Skorosty = [V_O]
-
+        self.pipe_par.append([100, 1])#чтобы избежать ошибок, когда кран в конце
         '''Инициализация объектов и расчет'''
         self.main_text_backend.append('')
         while self.t <= self.t_rab:

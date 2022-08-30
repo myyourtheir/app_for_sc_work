@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWidgets import  QDialog
+from PyQt5.QtWidgets import QDialog
 
 # from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import time
@@ -15,7 +15,7 @@ class initial_parameters_and_funcrions():
         self.g = 9.81
         self.c = 1000
 
-        self.d = 1000
+        # self.d = 1000
         self.o = 0.01
         self.p20 = 0.15696  # 20 м
         self.ro = 800
@@ -23,18 +23,18 @@ class initial_parameters_and_funcrions():
         self.t_rab = 1000  # Время работы
         self.w0 = 3000
         # Перевод в систему си
-        self.d = self.d / 1000
+        # self.d = self.d / 1000
         self.o = self.o / 1000
         self.v = self.v / 1000000
         self.t = 0
         # self.T = self.L / (self.N * self.c)
 
-    def find_lyam(self, Re, eps):
+    def find_lyam(self, Re, eps, d):
         if Re < 2320:
             lyam1 = 68 / Re
         elif (10 * eps) > Re >= 2320:
             lyam1 = 0.3164 / Re ** 0.25
-        elif (10 * eps) <= Re < (500 * self.d / self.o):
+        elif (10 * eps) <= Re < (500 * d / self.o):
             lyam1 = 0.11 * (eps + 68 / Re) ** 0.25
         else:
             lyam1 = 0.11 * (eps) ** 0.25
@@ -143,14 +143,16 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         if what_to_add == self.btn_Pipe.text():
             self.pipe_par_moment = []
+
             def add_pipeline_len_In_pipe_par_window():
                 self.pipe_par_moment.append(int(edit_L.text()))
-                self.pipe_par_moment.append(int(edit_d.text())/1000)
+                self.pipe_par_moment.append(int(edit_d.text()) / 1000)
                 self.pipe_par.append(self.pipe_par_moment)
                 self.main_text.setText(self.main_text.text() + what_to_add + "->")
                 self.main_text_backend.append(what_to_add)
                 self.n_btn_Pipe += 1
                 pipe_par_window.close()
+
             pipe_par_window = QDialog()
             pipe_par_window.setWindowTitle("Выбор параметров трубопровода")
             pipe_par_window.setFixedSize(210, 150)
@@ -257,25 +259,23 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
     def start(self):
 
-        def find_Jb(Davleniya, Skorosty):
+        def find_Jb(Davleniya, Skorosty, d):
             Vjb = Skorosty
-            Re = abs(Vjb) * self.d / self.v
-            lyamjb = self.find_lyam(Re, self.o / self.d)
+            Re = abs(Vjb) * d / self.v
+            lyamjb = self.find_lyam(Re, self.o / d, d)
             Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * self.d)
+                Skorosty) * T * self.c / (2 * d)
             return (Jb)
 
-        def find_Ja(Davleniya, Skorosty):
+        def find_Ja(Davleniya, Skorosty, d):
             Vja = Skorosty
-            Re = abs(Vja) * self.d / self.v
-            lyamja = self.find_lyam(Re, self.o / self.d)
+            Re = abs(Vja) * d / self.v
+            lyamja = self.find_lyam(Re, self.o / d, d)
             Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * self.d)
+                Skorosty) * T * self.c / (2 * d)
             return (Ja)
 
-
-
-        def pump_method(P, V, i, a, b, number, char, chto_vivodim, t_char=0):
+        def pump_method(P, V, i, a, b, number, char, chto_vivodim, d, t_char=0):
             ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
 
             if char == 0:
@@ -298,12 +298,12 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 w = 0
 
             a = (w / self.w0) ** 2 * a  # 302.06   Характеристика насоса # b = 8 * 10 ** (-7)
-            S = np.pi * (self.d / 2) ** 2
+            S = np.pi * (d / 2) ** 2
             if number == 0:
-                Ja = find_Ja(self.p10, 2)
+                Ja = find_Ja(self.p10, 2, d)
             else:
-                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
-            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2])
+                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
             VV = (-self.c / self.g + (
                     (self.c / self.g) ** 2 - b * (S * 3600) ** 2 * ((Jb - Ja) / (self.ro * self.g) - a)) ** 0.5) / (
                          b * (S * 3600) ** 2)
@@ -314,23 +314,22 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             else:
                 return [p2, VV]
 
+        def pipe_method(P, V, i, d):
 
-        def pipe_method(P, V, i):
-
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
-            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1])
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
             pp = (Ja + Jb) / (2 * 1000000)
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             return [pp, VV]
 
-        def gate_valve_method(P, V, i, chto_vivodim):
+        def gate_valve_method(P, V, i, chto_vivodim, d):
 
-            zet = 10**7  # тут должна быть функция определения местного сопротивления
+            zet = 5000  # тут должна быть функция определения местного сопротивления
 
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
-            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2])
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
             VV = (-2 * self.c * self.ro + (4 * self.ro ** 2 * self.c ** 2 - 2 * zet * self.ro * (Jb - Ja)) ** 0.5) / (
-                        zet * self.ro)
+                    zet * self.ro)
             p1 = (Ja - self.ro * self.c * VV) / 1000000
             p2 = (Jb + self.ro * self.c * VV) / 1000000
             if chto_vivodim == 1:
@@ -338,9 +337,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             else:
                 return [p2, VV]
 
-        def right_boundary_method(P, V, i, p_const):
+        def right_boundary_method(P, V, i, p_const, d):
 
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1])
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
             VV = (Ja - p_const) / (self.ro * self.c)
             pp = p_const / 1000000
             return [pp, VV]
@@ -408,23 +407,24 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 if x == 'Pump':
                     main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0],
                                             self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2],
-                                            1, self.pump_par[pump_number][3]))
+                                            1, self.pipe_par[count_pipe_iter][1], self.pump_par[pump_number][3]))
                     main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[pump_number][0],
                                             self.pump_par[pump_number][1], pump_number, self.pump_par[pump_number][2],
-                                            2, self.pump_par[pump_number][3]))
+                                            2, self.pipe_par[count_pipe_iter][1], self.pump_par[pump_number][3]))
                     pump_number += 1
                     iter += 2
                 elif x == 'Pipe':
                     for j in range(self.pipe_par[count_pipe_iter][0]):
-                        main.append(pipe_method(Davleniya, Skorosty, iter))
+                        main.append(pipe_method(Davleniya, Skorosty, iter, self.pipe_par[count_pipe_iter][1]))
                         iter += 1
                     count_pipe_iter += 1
                 elif x == 'Gate Valve':
-                    main.append(gate_valve_method(Davleniya, Skorosty, iter, 1))
-                    main.append(gate_valve_method(Davleniya, Skorosty, iter, 2))
+                    main.append(gate_valve_method(Davleniya, Skorosty, iter, 1, self.pipe_par[count_pipe_iter][1]))
+                    main.append(gate_valve_method(Davleniya, Skorosty, iter, 2, self.pipe_par[count_pipe_iter][1]))
                     iter += 2
                 elif x == '':
-                    main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20))
+                    main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20,
+                                                      self.pipe_par[count_pipe_iter - 1][1]))
 
             '''Распаковка main'''
 
@@ -455,7 +455,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     xx.append(x)
                     x += dx
                 count_pipe_iter += 1
-            elif y== 'Gate Valve':
+            elif y == 'Gate Valve':
                 xx.extend([x, x])
                 x += dx
             elif y == '':

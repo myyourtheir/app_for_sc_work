@@ -49,7 +49,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         """Начальные значения счетчика кликов"""
         self.n_btn_Pump = 0
         self.n_btn_Pipe = 0
-        self.n_btn_Gate_Valve = 0
+        self.n_btn_Tap = 0
         """Основная строка трубопровода"""
         self.main_text = QtWidgets.QLabel(self)
         self.main_text.setText("Pipeline: ->")
@@ -81,12 +81,12 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             "font-family: Monospac821 BC;"
             "font-size: 14px;"
         )
-        ''' Кнопка добавления задвижки'''
-        self.btn_Gate_Valve = QtWidgets.QPushButton(self)
-        self.btn_Gate_Valve.setText("Gate Valve")
-        self.btn_Gate_Valve.move(390, 450)
-        self.btn_Gate_Valve.setFixedSize(120, 40)
-        self.btn_Gate_Valve.setStyleSheet(
+        ''' Кнопка добавления крана'''
+        self.btn_Tap = QtWidgets.QPushButton(self)
+        self.btn_Tap.setText("Tap")
+        self.btn_Tap.move(390, 450)
+        self.btn_Tap.setFixedSize(120, 40)
+        self.btn_Tap.setStyleSheet(
             "background-color: rgb(170, 85, 255);"
             "font-family: Monospac821 BC;"
             "font-size: 14px;"
@@ -137,7 +137,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
     def clicked_btns_add(self):
         self.btn_Pipe.clicked.connect(lambda: self.add_smth('Pipe'))
         self.btn_Pump.clicked.connect(lambda: self.add_smth('Pump'))
-        self.btn_Gate_Valve.clicked.connect(lambda: self.add_smth('Gate Valve'))
+        self.btn_Tap.clicked.connect(lambda: self.add_smth('Tap'))
 
     def add_smth(self, what_to_add):
 
@@ -237,10 +237,10 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             pump_par_window.exec_()
 
 
-        elif what_to_add == self.btn_Gate_Valve.text():
+        elif what_to_add == self.btn_Tap.text():
             self.main_text.setText(self.main_text.text() + what_to_add + "->")
             self.main_text_backend.append(what_to_add)
-            self.n_btn_Gate_Valve += 1
+            self.n_btn_Tap += 1
         self.main_text.adjustSize()
         '''Кнопки управления'''
 
@@ -322,9 +322,60 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             return [pp, VV]
 
-        def gate_valve_method(P, V, i, chto_vivodim, d):
+        def tap_method(P, V, i, chto_vivodim, char, t_char, d):
+            ''' char( 0 - кран всегда открыт, 1 - кран открывается на tt секунде, 2 - кран закр на tt сек, другое - закрыт)'''
 
-            zet = 5000  # тут должна быть функция определения местного сопротивления
+            # угол открытия крана(стр 446, Идельчик)
+
+            def find_zet(nu):
+                if 0 <= nu < 10:
+                    zet = (0.32 / 10) * nu + 0.04
+                elif 10 <= nu < 20:
+                    zet = (1.6 - 0.36) / 10 * nu + 0.36
+                elif 20 <= nu < 30:
+                    zet = (5 - 1.6) / 10 * nu + 1.6
+                elif 30 <= nu < 40:
+                    zet = (15 - 5) / 10 * nu + 5
+                elif 40 <= nu < 50:
+                    zet = (42.5 - 15) / 10 * nu + 15
+                elif 50 <= nu < 60:
+                    zet = (130 - 42.5) / 10 * nu + 42.5
+                elif 60 <= nu < 70:
+                    zet = (800 - 130) / 10 * nu + 130
+                elif 70 <= nu < 80:
+                    zet = (2500 - 800) / 10 * nu + 800
+                elif 80 <= nu < 85:
+                    zet = (6000 - 2500) / 10 * nu + 2500
+                else:  # 85 <= nu <= 100:
+                    zet = (1000000 - 6000) / 15 + 6000
+                return zet
+
+            if char == 0:
+                nu = 0
+                zet = find_zet(nu)
+            elif char == 1:  # открытие на tt сек
+                if t_char <= self.t <= t_char + 100:
+                    nu = 1 * (self.t - t_char)
+                    zet = find_zet(nu)
+                elif self.t < t_char:
+                    nu = 100
+                    zet = find_zet(nu)
+                else:
+                    nu = 0
+                    zet = find_zet(nu)
+            elif char == 2:  # закрытие на ttt сек
+                if self.t < t_char:
+                    nu = 0
+                    zet = find_zet(nu)
+                elif t_char <= self.t <= (t_char + 100):
+                    nu = 100 - 1 * (self.t - t_char)
+                    zet = find_zet(nu)
+                else:
+                    nu = 100
+                    zet = find_zet(nu)
+            else:
+                nu = 100
+                zet = find_zet(nu)
 
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
@@ -384,7 +435,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             num_of_elements_in_lists += self.pipe_par[i][0]
             L += self.pipe_par[i][0] * 1000
             N += self.pipe_par[i][0]
-        num_of_elements_in_lists += self.n_btn_Pump * 2 + 1 + self.n_btn_Gate_Valve * 2
+        num_of_elements_in_lists += self.n_btn_Pump * 2 + 1 + self.n_btn_Tap * 2
         L += 1000
         N += 2
         '''Задание общих параметров трубопровода'''
@@ -418,9 +469,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                         main.append(pipe_method(Davleniya, Skorosty, iter, self.pipe_par[count_pipe_iter][1]))
                         iter += 1
                     count_pipe_iter += 1
-                elif x == 'Gate Valve':
-                    main.append(gate_valve_method(Davleniya, Skorosty, iter, 1, self.pipe_par[count_pipe_iter][1]))
-                    main.append(gate_valve_method(Davleniya, Skorosty, iter, 2, self.pipe_par[count_pipe_iter][1]))
+                elif x == 'Tap':
+                    main.append(tap_method(Davleniya, Skorosty, iter, 1, 1, 200, self.pipe_par[count_pipe_iter][1]))
+                    main.append(tap_method(Davleniya, Skorosty, iter, 2, 1, 200, self.pipe_par[count_pipe_iter][1]))
                     iter += 2
                 elif x == '':
                     main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20,
@@ -455,7 +506,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     xx.append(x)
                     x += dx
                 count_pipe_iter += 1
-            elif y == 'Gate Valve':
+            elif y == 'Tap':
                 xx.extend([x, x])
                 x += dx
             elif y == '':

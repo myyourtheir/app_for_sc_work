@@ -292,7 +292,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.main_text.setText("Pipeline: ->")
         self.n_btn_Pump = 0
         self.n_btn_Pipe = 0
-
     def clicked_btn_start(self):
         self.btn_start.clicked.connect(lambda: self.start())
 
@@ -463,7 +462,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 lineV.set_xdata(xx)
                 plt.draw()
                 plt.gcf().canvas.flush_events()
-                time.sleep(0.01)
+                time.sleep(0.1)
                 t += T
             plt.ion()
             plt.show()

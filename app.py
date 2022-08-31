@@ -401,7 +401,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 zet = find_zet(nu)
             elif char == 1:  # открытие на tt сек
                 if t_char <= self.t <= t_char + 100:
-                    nu = 1 * (self.t - t_char)
+                    nu = 100 - 1 * (self.t - t_char)
                     zet = find_zet(nu)
                 elif self.t < t_char:
                     nu = 100
@@ -414,7 +414,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     nu = 0
                     zet = find_zet(nu)
                 elif t_char <= self.t <= (t_char + 100):
-                    nu = 100 - 1 * (self.t - t_char)
+                    nu = 1 * (self.t - t_char)
                     zet = find_zet(nu)
                 else:
                     nu = 100

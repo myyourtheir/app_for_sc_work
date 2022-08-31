@@ -7,6 +7,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
+import os
 
 
 class initial_parameters_and_funcrions():
@@ -112,7 +113,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             "font-family: Monospac821 BC;"
             "font-size: 14px;"
         )
-        # btn_exit.clicked.connect(app.exec_())
+        self.btn_exit.clicked.connect(lambda: QtWidgets.qApp.quit())
 
         """Кнопка обновления строки"""
         self.btn_reset = QtWidgets.QPushButton(self)
@@ -289,15 +290,13 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             tap_par_window.exec_()
 
         self.main_text.adjustSize()
-        '''Кнопки управления'''
+    '''Кнопки управления'''
 
     def clicked_btn_reset(self):
         self.btn_reset.clicked.connect(lambda: self.reset())
 
     def reset(self):
-        self.main_text.setText("Pipeline: ->")
-        self.n_btn_Pump = 0
-        self.n_btn_Pipe = 0
+        os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
     def clicked_btn_start(self):
         self.btn_start.clicked.connect(lambda: self.start())

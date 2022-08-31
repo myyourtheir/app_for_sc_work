@@ -363,15 +363,12 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         def pipe_method(P, V, i, d):
             """Условие, может быть, нужно будет переписать"""
             if i ==0:
-                Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
-                pp = self.p10
-                VV = (pp - Jb) / (self.ro * self.c)
-                pp = pp
+                Ja = find_Ja(self.p10, 2, d)
             else:
                 Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
-                Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
-                pp = (Ja + Jb) / (2 * 1000000)
-                VV = (Ja - Jb) / (2 * self.ro * self.c)
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
+            pp = (Ja + Jb) / (2 * 1000000)
+            VV = (Ja - Jb) / (2 * self.ro * self.c)
             return [pp, VV]
 
         def tap_method(P, V, i, chto_vivodim, char, t_char, d):
@@ -428,8 +425,10 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             else:
                 nu = 100
                 zet = find_zet(nu)
-
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+            if i ==0:
+                Ja = find_Ja(self.p10, 2, d)
+            else:
+                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
             VV = (-2 * self.c * self.ro + (4 * self.ro ** 2 * self.c ** 2 - 2 * zet * self.ro * (Jb - Ja)) ** 0.5) / (
                     zet * self.ro)

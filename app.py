@@ -59,6 +59,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             "font-family: Monospac821 BC;"
             "font-size: 19px;"
         )
+
         self.main_text.adjustSize()
 
         """Кнопка добавления насоса"""
@@ -150,7 +151,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 self.pipe_par_moment.append(int(edit_L.text()))
                 self.pipe_par_moment.append(int(edit_d.text()) / 1000)
                 self.pipe_par.append(self.pipe_par_moment)
-                self.main_text.setText(self.main_text.text() + what_to_add + "->")
+                self.main_text.setText(self.main_text.text() + what_to_add+ '(' + edit_L.text() + 'км' +', ' + edit_d.text() + 'мм)' + "->")
                 self.main_text_backend.append(what_to_add)
                 self.n_btn_Pipe += 1
                 pipe_par_window.close()
@@ -252,7 +253,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 elif rad_vikl.isChecked():
                     self.tap_par_moment.append(2)
                 else:
-                    self.tap_par_moment.append(0)
+                    self.tap_par_moment.append(3)
                 self.tap_par_moment.append(int(edit_time_t.text()))
                 self.main_text.setText(self.main_text.text() + what_to_add + "->")
                 self.main_text_backend.append(what_to_add)
@@ -290,6 +291,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             tap_par_window.exec_()
 
         self.main_text.adjustSize()
+
     '''Кнопки управления'''
 
     def clicked_btn_reset(self):
@@ -362,7 +364,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         def pipe_method(P, V, i, d):
             """Условие, может быть, нужно будет переписать"""
-            if i ==0:
+            if i == 0:
                 Ja = find_Ja(self.p10, 2, d)
             else:
                 Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
@@ -425,7 +427,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             else:
                 nu = 100
                 zet = find_zet(nu)
-            if i ==0:
+            if i == 0:
                 Ja = find_Ja(self.p10, 2, d)
             else:
                 Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)

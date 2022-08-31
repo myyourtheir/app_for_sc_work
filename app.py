@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QDialog
 
@@ -163,12 +163,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             edit_L = QtWidgets.QLineEdit(pipe_par_window)
             edit_L.setText("100")
             edit_L.move(10, 30)
+            edit_L.setValidator(QtGui.QIntValidator(0, 999))
             lbl_d = QtWidgets.QLabel(pipe_par_window)
             lbl_d.setText("Укажите диаметр трубопровода в мм: ")
             lbl_d.move(10, 60)
             edit_d = QtWidgets.QLineEdit(pipe_par_window)
             edit_d.setText('1000')
             edit_d.move(10, 80)
+            edit_d.setValidator(QtGui.QIntValidator(0, 1999))
             btn_ok = QtWidgets.QPushButton(pipe_par_window)
             btn_ok.setText('Ok')
             btn_ok.move(100, 120)
@@ -205,12 +207,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             edit_a = QtWidgets.QLineEdit(pump_par_window)
             edit_a.move(10, 30)
             edit_a.setText("310")
+            edit_a.setValidator(QtGui.QIntValidator(0, 9999))
             lbl_b = QtWidgets.QLabel(pump_par_window)
             lbl_b.move(10, 60)
             lbl_b.setText("Укажите параметр b:")
             edit_b = QtWidgets.QLineEdit(pump_par_window)
             edit_b.move(10, 80)
             edit_b.setText("0.0000008")
+            # edit_b.setValidator(QtGui.QDoubleValidator(0, 999999, 10))
             lbl_char_p = QtWidgets.QLabel(pump_par_window)
             lbl_char_p.setText("Выберите характер работы насоса:")
             lbl_char_p.move(10, 110)
@@ -230,8 +234,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             edit_time_p = QtWidgets.QLineEdit(pump_par_window)
             edit_time_p.move(10, 200)
             edit_time_p.setText("0")
+            edit_time_p.setValidator(QtGui.QIntValidator(0, 9999))
             btn_ok_pump = QtWidgets.QPushButton(pump_par_window)
-            # btn_ok_pump.setFixedSize()
             btn_ok_pump.setText("Ok")
             btn_ok_pump.move(100, 230)
             btn_ok_pump.clicked.connect(add_pump_par)
@@ -254,6 +258,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 self.tap_par.append(self.tap_par_moment)
                 self.n_btn_Tap += 1
                 tap_par_window.close()
+
             tap_par_window = QDialog()
             tap_par_window.setWindowTitle("Выбор параметров крана")
             tap_par_window.setFixedSize(210, 150)
@@ -276,6 +281,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             edit_time_t = QtWidgets.QLineEdit(tap_par_window)
             edit_time_t.move(10, 100)
             edit_time_t.setText("100")
+            edit_time_t.setValidator(QtGui.QIntValidator(0, 9999))
             btn_ok_tap = QtWidgets.QPushButton(tap_par_window)
             btn_ok_tap.setText('Ok')
             btn_ok_tap.move(115, 125)
@@ -292,6 +298,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.main_text.setText("Pipeline: ->")
         self.n_btn_Pump = 0
         self.n_btn_Pipe = 0
+
     def clicked_btn_start(self):
         self.btn_start.clicked.connect(lambda: self.start())
 
@@ -486,7 +493,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         V_O = P_O
         Davleniya = [P_O]
         Skorosty = [V_O]
-        self.pipe_par.append([100, 1])#чтобы избежать ошибок, когда кран в конце
+        self.pipe_par.append([100, 1])  # чтобы избежать ошибок, когда кран в конце
         '''Инициализация объектов и расчет'''
         self.main_text_backend.append('')
         while self.t <= self.t_rab:
@@ -498,10 +505,12 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             for i, x in enumerate(self.main_text_backend):
                 if x == 'Pump':
                     main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[count_pump_iter][0],
-                                            self.pump_par[count_pump_iter][1], count_pump_iter, self.pump_par[count_pump_iter][2],
+                                            self.pump_par[count_pump_iter][1], count_pump_iter,
+                                            self.pump_par[count_pump_iter][2],
                                             1, self.pipe_par[count_pipe_iter][1], self.pump_par[count_pump_iter][3]))
                     main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[count_pump_iter][0],
-                                            self.pump_par[count_pump_iter][1], count_pump_iter, self.pump_par[count_pump_iter][2],
+                                            self.pump_par[count_pump_iter][1], count_pump_iter,
+                                            self.pump_par[count_pump_iter][2],
                                             2, self.pipe_par[count_pipe_iter][1], self.pump_par[count_pump_iter][3]))
                     count_pump_iter += 1
                     iter += 2
@@ -511,10 +520,12 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                         iter += 1
                     count_pipe_iter += 1
                 elif x == 'Tap':
-                    main.append(tap_method(Davleniya, Skorosty, iter, 1, self.tap_par[count_tap_iter][0], self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1]))
-                    main.append(tap_method(Davleniya, Skorosty, iter, 2, self.tap_par[count_tap_iter][0], self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1]))
+                    main.append(tap_method(Davleniya, Skorosty, iter, 1, self.tap_par[count_tap_iter][0],
+                                           self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1]))
+                    main.append(tap_method(Davleniya, Skorosty, iter, 2, self.tap_par[count_tap_iter][0],
+                                           self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1]))
                     iter += 2
-                    count_tap_iter+=1
+                    count_tap_iter += 1
                 elif x == '':
                     main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20,
                                                       self.pipe_par[count_pipe_iter - 1][1]))

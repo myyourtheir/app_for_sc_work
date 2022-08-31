@@ -345,7 +345,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
             a = (w / self.w0) ** 2 * a  # 302.06   Характеристика насоса # b = 8 * 10 ** (-7)
             S = np.pi * (d / 2) ** 2
-            if number == 0:
+            if i == 0:
                 Ja = find_Ja(self.p10, 2, d)
             else:
                 Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
@@ -361,11 +361,17 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 return [p2, VV]
 
         def pipe_method(P, V, i, d):
-
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
-            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
-            pp = (Ja + Jb) / (2 * 1000000)
-            VV = (Ja - Jb) / (2 * self.ro * self.c)
+            """Условие, может быть, нужно будет переписать"""
+            if i ==0:
+                Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
+                pp = self.p10
+                VV = (pp - Jb) / (self.ro * self.c)
+                pp = pp
+            else:
+                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+                Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
+                pp = (Ja + Jb) / (2 * 1000000)
+                VV = (Ja - Jb) / (2 * self.ro * self.c)
             return [pp, VV]
 
         def tap_method(P, V, i, chto_vivodim, char, t_char, d):

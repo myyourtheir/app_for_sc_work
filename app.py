@@ -393,7 +393,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
                 Skorosty) * T * self.c / (2 * d)
             return (Jb)
-
+            # Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
+            #                 Skorosty) * T * self.c / (2 * d) + ro*c*g*sin(a)
         def find_Ja(Davleniya, Skorosty, d):
             Vja = Skorosty
             Re = abs(Vja) * d / self.v
@@ -401,7 +402,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
                 Skorosty) * T * self.c / (2 * d)
             return (Ja)
-
+            # Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
+            #                 Skorosty) * T * self.c / (2 * d) - ro*c*g*sin(a)
         def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char):
             ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
 
@@ -461,23 +463,23 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 if 0 <= nu < 10:
                     zet = (0.32 / 10) * nu + 0.04
                 elif 10 <= nu < 20:
-                    zet = (1.6 - 0.36) / 10 * nu + 0.36
+                    zet = (1.6 - 0.36) / 10 * (nu - 10) + 0.36
                 elif 20 <= nu < 30:
-                    zet = (5 - 1.6) / 10 * nu + 1.6
+                    zet = (5 - 1.6) / 10 * (nu - 20) + 1.6
                 elif 30 <= nu < 40:
-                    zet = (15 - 5) / 10 * nu + 5
+                    zet = (15 - 5) / 10 * (nu - 30) + 5
                 elif 40 <= nu < 50:
-                    zet = (42.5 - 15) / 10 * nu + 15
+                    zet = (42.5 - 15) / 10 * (nu - 40) + 15
                 elif 50 <= nu < 60:
-                    zet = (130 - 42.5) / 10 * nu + 42.5
+                    zet = (130 - 42.5) / 10 * (nu - 50) + 42.5
                 elif 60 <= nu < 70:
-                    zet = (800 - 130) / 10 * nu + 130
+                    zet = (800 - 130) / 10 * (nu - 60) + 130
                 elif 70 <= nu < 80:
-                    zet = (2500 - 800) / 10 * nu + 800
+                    zet = (2500 - 800) / 10 * (nu - 70) + 800
                 elif 80 <= nu < 85:
-                    zet = (6000 - 2500) / 10 * nu + 2500
+                    zet = (6000 - 2500) / 10 * (nu - 80) + 2500
                 else:  # 85 <= nu <= 100:
-                    zet = (100000000 - 6000) / 15 + 6000
+                    zet = (100000000 - 6000) / 15 * (nu - 85) + 6000
                 return zet
 
             if char == 0:
@@ -636,7 +638,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 V_moment.append(main[i][1])
             Skorosty.append(V_moment)
             self.t += T
-
+        print(Davleniya)
         '''Создание списка координат'''
         dx = L / N
         x = 0

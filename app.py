@@ -15,20 +15,13 @@ class initial_parameters_and_funcrions():
         self.p10 = 0.784800  # 100м
         self.g = 9.81
         self.c = 1000
-
-        # self.d = 1000
         self.o = 0.01
         self.p20 = 0.15696  # 20 м
-        # self.ro = 800
-        # self.v = 10
-        # self.t_rab = 1000  # Время работы
         self.w0 = 3000
         # Перевод в систему си
-        # self.d = self.d / 1000
         self.o = self.o / 1000
-        # self.v = self.v / 1000000
         self.t = 0
-        # self.T = self.L / (self.N * self.c)
+
 
     def find_lyam(self, Re, eps, d):
         if Re < 2320:
@@ -529,7 +522,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             linep, = ax1.plot(xx, p0, c='green')
             lineV, = ax2.plot(xx, V0)
             t = 0
-            for i in range(self.t_rab):
+            i = 0
+            while t <= self.t_rab:
                 ax1.set_title(f't = {round(t)} ' + 'c')
                 linep.set_ydata(p_ism[i])
                 linep.set_xdata(xx)
@@ -539,6 +533,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 plt.gcf().canvas.flush_events()
                 time.sleep(0.01)
                 t += T
+                i+=1
             plt.ion()
             plt.show()
 

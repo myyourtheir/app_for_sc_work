@@ -638,7 +638,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 V_moment.append(main[i][1])
             Skorosty.append(V_moment)
             self.t += T
-        print(Davleniya)
+
         '''Создание списка координат'''
         dx = L / N
         x = 0
@@ -669,3 +669,13 @@ if __name__ == "__main__":
     window = Window()
     window.show()
     sys.exit(app.exec_())
+
+
+
+'''чтение файла высотных отметок и преобразование в целочисленный список'''
+with open("Example.txt") as text_z:
+    vis_otm_str = text_z.read().split(',')
+    vis_otm = []
+    for x in vis_otm_str:
+        x = int(x)
+        vis_otm.append(x)

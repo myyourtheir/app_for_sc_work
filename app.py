@@ -543,7 +543,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             t = 0
             i = 0
             while t <= self.t_rab:
-                ax1.set_title(f't = {round(t)} ' + 'c')
+                ax1.set_title(f't = {round(t, 2)} ' + 'c')
                 linep.set_ydata(p_ism[i])
                 linep.set_xdata(xx)
                 lineV.set_ydata(V_ism[i])

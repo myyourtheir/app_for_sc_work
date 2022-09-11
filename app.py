@@ -317,6 +317,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 else:
                     self.tap_par_moment.append(3)
                 self.tap_par_moment.append(int(edit_time_t.text()))
+                self.tap_par_moment.append(int(edit_t_otkr.text()))
                 self.main_text.setText(self.main_text.text() + what_to_add + "->")
                 self.main_text_backend.append(what_to_add)
                 self.tap_par.append(self.tap_par_moment)
@@ -325,7 +326,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
             tap_par_window = QDialog()
             tap_par_window.setWindowTitle("Выбор параметров крана")
-            tap_par_window.setFixedSize(210, 150)
+            tap_par_window.setFixedSize(220, 210)
             lbl_char = QtWidgets.QLabel(tap_par_window)
             lbl_char.setText("Выберите характер работы крана:")
             lbl_char.move(10, 10)
@@ -340,7 +341,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             hlayout_for_radio_buttons.addWidget(rad_vkl)
             hlayout_for_radio_buttons.addWidget(rad_vikl)
             lbl_time_t = QtWidgets.QLabel(tap_par_window)
-            lbl_time_t.setText("Укажите время откр/закр в сек:")
+            lbl_time_t.setText("Укажите время начала откр/закр в сек:")
             lbl_time_t.move(10, 80)
             edit_time_t = QtWidgets.QLineEdit(tap_par_window)
             edit_time_t.move(10, 100)
@@ -348,7 +349,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             edit_time_t.setValidator(QtGui.QIntValidator(0, 9999))
             btn_ok_tap = QtWidgets.QPushButton(tap_par_window)
             btn_ok_tap.setText('Ok')
-            btn_ok_tap.move(115, 125)
+            btn_ok_tap.move(115, 185)
+            lbl_t_otkr =QtWidgets.QLabel(tap_par_window)
+            lbl_t_otkr.setText("Укажите время откр/закр в сек:")
+            lbl_t_otkr.move(10, 130)
+            edit_t_otkr = QtWidgets.QLineEdit(tap_par_window)
+            edit_t_otkr.setText('100')
+            edit_t_otkr.move(10, 150)
+            edit_t_otkr.setValidator(QtGui.QIntValidator(0, 999))
             btn_ok_tap.clicked.connect(add_tap_par)
             tap_par_window.exec_()
 
@@ -388,7 +396,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 Skorosty) * T * self.c / (2 * d)
             return (Ja)
 
-        def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char=0):
+        def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char):
             ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
 
             if char == 0:
@@ -438,7 +446,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             return [pp, VV]
 
-        def tap_method(P, V, i, chto_vivodim, char, t_char, d):
+        def tap_method(P, V, i, chto_vivodim, char, t_char, d, t_otkr):
             ''' char( 0 - кран всегда открыт, 1 - кран открывается на tt секунде, 2 - кран закр на tt сек, другое - закрыт)'''
 
             # угол открытия крана(стр 446, Идельчик)
@@ -470,8 +478,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 nu = 0
                 zet = find_zet(nu)
             elif char == 1:  # открытие на tt сек
-                if t_char <= self.t <= t_char + 100:
-                    nu = 100 - 1 * (self.t - t_char)
+                if t_char <= self.t <= t_char + t_otkr:
+                    nu = 100 - 100/t_otkr * (self.t - t_char)
                     zet = find_zet(nu)
                 elif self.t < t_char:
                     nu = 100
@@ -483,8 +491,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 if self.t < t_char:
                     nu = 0
                     zet = find_zet(nu)
-                elif t_char <= self.t <= (t_char + 100):
-                    nu = 1 * (self.t - t_char)
+                elif t_char <= self.t <= (t_char + t_otkr):
+                    nu = 100/t_otkr * (self.t - t_char)
                     zet = find_zet(nu)
                 else:
                     nu = 100
@@ -492,6 +500,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             else:
                 nu = 100
                 zet = find_zet(nu)
+
             if i == 0:
                 Ja = find_Ja(self.p10, 2, d)
             else:
@@ -594,9 +603,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     count_pipe_iter += 1
                 elif x == 'Tap':
                     main.append(tap_method(Davleniya, Skorosty, iter, 1, self.tap_par[count_tap_iter][0],
-                                           self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1]))
+                                           self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1], self.tap_par[count_tap_iter][2]))
                     main.append(tap_method(Davleniya, Skorosty, iter, 2, self.tap_par[count_tap_iter][0],
-                                           self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1]))
+                                           self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1], self.tap_par[count_tap_iter][2]))
                     iter += 2
                     count_tap_iter += 1
                 elif x == '':

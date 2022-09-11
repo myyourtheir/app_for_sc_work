@@ -245,6 +245,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 else:
                     self.pump_par_moment.append(0)
                 self.pump_par_moment.append(int(edit_time_p.text()))
+                self.pump_par_moment.append(int(edit_t_vkl.text()))
                 self.pump_par.append(self.pump_par_moment)
                 self.main_text.setText(self.main_text.text() + what_to_add + "->")
                 self.main_text_backend.append(what_to_add)
@@ -253,7 +254,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
             pump_par_window = QDialog()
             pump_par_window.setWindowTitle("Выбор параметров насоса")
-            pump_par_window.setFixedSize(200, 270)
+            pump_par_window.setFixedSize(200, 330)
             lbl_a = QtWidgets.QLabel(pump_par_window)
             lbl_a.move(10, 10)
             lbl_a.setText("Укажите параметр а:")
@@ -289,9 +290,18 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             edit_time_p.move(10, 200)
             edit_time_p.setText("0")
             edit_time_p.setValidator(QtGui.QIntValidator(0, 9999))
+            lbl_t_vkl = QtWidgets.QLabel(pump_par_window)
+            lbl_t_vkl.setText("Укажите время выбега насоса в сек: ")
+            lbl_t_vkl.move(10, 230)
+            edit_t_vkl = QtWidgets.QLineEdit(pump_par_window)
+            edit_t_vkl.setText("20")
+            edit_t_vkl.move(10, 250)
+            edit_t_vkl.setValidator(QtGui.QIntValidator(0, 99))
+
+
             btn_ok_pump = QtWidgets.QPushButton(pump_par_window)
             btn_ok_pump.setText("Ok")
-            btn_ok_pump.move(100, 230)
+            btn_ok_pump.move(100, 290)
             btn_ok_pump.clicked.connect(add_pump_par)
             pump_par_window.exec_()
 
@@ -378,23 +388,23 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 Skorosty) * T * self.c / (2 * d)
             return (Ja)
 
-        def pump_method(P, V, i, a, b, number, char, chto_vivodim, d, t_char=0):
+        def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char=0):
             ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
 
             if char == 0:
                 w = self.w0
             elif char == 1:  # Включение на tt сек
-                if t_char <= self.t <= t_char + 20:
-                    w = 150 * (self.t - t_char)
+                if t_char <= self.t <= t_char + t_vkl:
+                    w = self.w0/t_vkl * (self.t - t_char)
                 elif self.t < t_char:
                     w = 0
                 else:
-                    w = 3000
+                    w = self.w0
             elif char == 2:  # Выключение на ttt сек
                 if self.t < t_char:
-                    w = 3000
-                elif t_char <= self.t <= (t_char + 20):
-                    w = 3000 - 150 * (self.t - t_char)
+                    w = self.w0
+                elif t_char <= self.t <= (t_char + t_vkl):
+                    w = self.w0 - self.w0/t_vkl * (self.t - t_char)
                 else:
                     w = 0
             else:
@@ -568,13 +578,13 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             for i, x in enumerate(self.main_text_backend):
                 if x == 'Pump':
                     main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[count_pump_iter][0],
-                                            self.pump_par[count_pump_iter][1], count_pump_iter,
+                                            self.pump_par[count_pump_iter][1],
                                             self.pump_par[count_pump_iter][2],
-                                            1, self.pipe_par[count_pipe_iter][1], self.pump_par[count_pump_iter][3]))
+                                            1, self.pipe_par[count_pipe_iter][1],self.pump_par[count_pump_iter][4] ,self.pump_par[count_pump_iter][3]))
                     main.append(pump_method(Davleniya, Skorosty, iter, self.pump_par[count_pump_iter][0],
-                                            self.pump_par[count_pump_iter][1], count_pump_iter,
+                                            self.pump_par[count_pump_iter][1],
                                             self.pump_par[count_pump_iter][2],
-                                            2, self.pipe_par[count_pipe_iter][1], self.pump_par[count_pump_iter][3]))
+                                            2, self.pipe_par[count_pipe_iter][1],self.pump_par[count_pump_iter][4] ,self.pump_par[count_pump_iter][3]))
                     count_pump_iter += 1
                     iter += 2
                 elif x == 'Pipe':

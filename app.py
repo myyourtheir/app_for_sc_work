@@ -19,14 +19,14 @@ class initial_parameters_and_funcrions():
         # self.d = 1000
         self.o = 0.01
         self.p20 = 0.15696  # 20 м
-        self.ro = 800
-        self.v = 10
-        self.t_rab = 1000  # Время работы
+        # self.ro = 800
+        # self.v = 10
+        # self.t_rab = 1000  # Время работы
         self.w0 = 3000
         # Перевод в систему си
         # self.d = self.d / 1000
         self.o = self.o / 1000
-        self.v = self.v / 1000000
+        # self.v = self.v / 1000000
         self.t = 0
         # self.T = self.L / (self.N * self.c)
 
@@ -61,6 +61,65 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         )
 
         self.main_text.adjustSize()
+
+        '''Ввод времени работы'''
+        self.text_t_rab = QtWidgets.QLabel(self)
+        self.text_t_rab.setText('Время расчета в сек: ')
+        self.text_t_rab.move(50, 215)
+        self.text_t_rab.setFixedSize(150, 25)
+        self.text_t_rab.setStyleSheet(
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
+        self.edit_t_rab = QtWidgets.QLineEdit(self)
+        self.edit_t_rab.setText('1000')
+        self.edit_t_rab.move(200, 215)
+        self.edit_t_rab.setFixedSize(100, 25)
+        self.edit_t_rab.setStyleSheet(
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
+        self.edit_t_rab.setValidator(QtGui.QIntValidator(0, 9999))
+
+        """Ввод плотности"""
+        self.text_ro = QtWidgets.QLabel(self)
+        self.text_ro.setText("Плотность в кг/м^3: ")
+        self.text_ro.move(50, 250)
+        self.text_ro.setStyleSheet(
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
+        self.text_ro.setFixedSize(150, 25)
+
+        self.edit_ro = QtWidgets.QLineEdit(self)
+        self.edit_ro.setText('800')
+        self.edit_ro.move(200, 250)
+        self.edit_ro.setFixedSize(100, 25)
+        self.edit_ro.setStyleSheet(
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
+        self.edit_ro.setValidator(QtGui.QIntValidator(0, 9999))
+
+        '''Ввод кинематич вязкости'''
+        self.text_v = QtWidgets.QLabel(self)
+        self.text_v.setText("Кин. вязкость в сСт: ")
+        self.text_v.move(50, 285)
+        self.text_v.setFixedSize(150, 25)
+        self.text_v.setStyleSheet(
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
+        self.edit_v = QtWidgets.QLineEdit(self)
+        self.edit_v.setText('10')
+        self.edit_v.move(200, 285)
+        self.edit_v.setStyleSheet(
+            "font-family: Monospac821 BC;"
+            "font-size: 14px;"
+        )
+        self.edit_v.setFixedSize(100, 25)
+        self.edit_v.setValidator(QtGui.QIntValidator(0, 9999))
+
 
         """Кнопка добавления насоса"""
         self.btn_Pump = QtWidgets.QPushButton(self)
@@ -306,6 +365,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         """Основная функция"""
 
     def start(self):
+        self.ro = int(self.edit_ro.text())
+        self.t_rab = int(self.edit_t_rab.text())
+        self.v = int(self.edit_v.text())/1000000
 
         def find_Jb(Davleniya, Skorosty, d):
             Vjb = Skorosty

@@ -386,6 +386,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.t_rab = int(self.edit_t_rab.text())
         self.v = int(self.edit_v.text()) / 1000000
 
+        '''Чтение высотных отметок'''
+        with open("Example.txt") as text_z:
+            vis_otm_str = text_z.read().split(',')
+            vis_otm = []
+            for x in vis_otm_str:
+                x = int(x)
+                vis_otm.append(x)
+            text_z.close()
         def find_Jb(Davleniya, Skorosty, d):
             Vjb = Skorosty
             Re = abs(Vjb) * d / self.v
@@ -395,6 +403,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             return (Jb)
             # Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
             #                 Skorosty) * T * self.c / (2 * d) + ro*c*g*sin(a)
+
         def find_Ja(Davleniya, Skorosty, d):
             Vja = Skorosty
             Re = abs(Vja) * d / self.v
@@ -404,6 +413,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             return (Ja)
             # Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
             #                 Skorosty) * T * self.c / (2 * d) - ro*c*g*sin(a)
+
         def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char):
             ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
 
@@ -438,21 +448,28 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                          b * (S * 3600) ** 2)
             p1 = (Ja - self.ro * self.c * VV) / 1000000
             p2 = (Jb + self.ro * self.c * VV) / 1000000
+            H1 = p1 / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
+            H2 = p2 / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
             if chto_vivodim == 1:
-                return [p1, VV]
+                return [p1, VV, H1]
             else:
-                return [p2, VV]
+                return [p2, VV, H2]
 
         def pipe_method(P, V, i, d):
             """Условие, может быть, нужно будет переписать"""
+
             if i == 0:
-                Ja = find_Ja(self.p10, 2, d)
+                Ja = find_Ja(self.p10, 2, d) - T * self.ro * self.c * self.g * np.sin(
+                    (vis_otm[i + 1] - vis_otm[i]) / 1000)
             else:
-                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
-            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
+                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d) - T * self.ro * self.c * self.g * np.sin(
+                    (vis_otm[i + 1] - vis_otm[i]) / 1000)
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d) + T * self.ro * self.c * self.g * np.sin(
+                (vis_otm[i + 1] - vis_otm[i]) / 1000)
             pp = (Ja + Jb) / (2 * 1000000)
             VV = (Ja - Jb) / (2 * self.ro * self.c)
-            return [pp, VV]
+            H = pp / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
+            return [pp, VV, H]
 
         def tap_method(P, V, i, chto_vivodim, char, t_char, d, t_otkr, procent):
             ''' char( 0 - кран всегда открыт, 1 - кран открывается на tt секунде, 2 - кран закр на tt сек, другое - закрыт)'''
@@ -518,44 +535,53 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     zet * self.ro)
             p1 = (Ja - self.ro * self.c * VV) / 1000000
             p2 = (Jb + self.ro * self.c * VV) / 1000000
+            H1 = p1 / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
+            H2 = p2 / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
             if chto_vivodim == 1:
-                return [p1, VV]
+                return [p1, VV, H1]
             else:
-                return [p2, VV]
+                return [p2, VV, H2]
 
         def right_boundary_method(P, V, i, p_const, d):
 
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
             VV = (Ja - p_const) / (self.ro * self.c)
             pp = p_const / 1000000
-            return [pp, VV]
+            H = pp / (self.ro * self.g) + vis_otm[i] + VV ** 2 / (2 * self.g)
+            return [pp, VV, H]
 
-        def Animation(p0, V0, xx, p_ism, V_ism):
+        def Animation(p0, V0, H0, xx, p_ism, V_ism, H_ism):
             '''не смог разобраться в модуле анимации библиотеки матплотлиб, поэтому написал свой
              тоже не очень важно
             тут p_ism и v_ism это вложенный двухуровневый список, т.е. список внутри списка'''
             plt.ion()
             plt.style.use('seaborn-whitegrid')
-            fig = plt.figure(figsize=(7, 6))
-            ax1 = fig.add_subplot(2, 1, 1)
-            ax2 = fig.add_subplot(2, 1, 2)
+            fig = plt.figure(figsize=(10, 9))
+            ax1 = fig.add_subplot(3, 1, 2)
+            ax2 = fig.add_subplot(3, 1, 3)
+            ax3 = fig.add_subplot(3, 1, 1)
             ax1.set_xlabel('X, м')
             ax2.set_xlabel('X, м')
+            ax3.set_xlabel('X, м')
             ax1.set_ylabel('P, Мпа')
             ax2.set_ylabel('V, м/с')
+            ax3.set_ylabel('H, м')
             ax2.set_ylim(-5, 5)
             ax1.set_ylim(-3, 7)
-
+            ax3.set_ylim(-50, 700)
             linep, = ax1.plot(xx, p0, c='green')
             lineV, = ax2.plot(xx, V0)
+            lineH, = ax3.plot(xx, H0, c = "red")
             t = 0
             i = 0
             while t <= self.t_rab:
-                ax1.set_title(f't = {round(t, 2)} ' + 'c')
+                ax3.set_title(f't = {round(t, 2)} ' + 'c')
                 linep.set_ydata(p_ism[i])
                 linep.set_xdata(xx)
                 lineV.set_ydata(V_ism[i])
                 lineV.set_xdata(xx)
+                lineH.set_ydata(H_ism[i])
+                lineH.set_xdata(xx)
                 plt.draw()
                 plt.gcf().canvas.flush_events()
                 time.sleep(0.01)
@@ -581,8 +607,10 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         """Начальные списки соростей и давлений на основе количества кликов"""
         P_O = [0.1] * num_of_elements_in_lists
         V_O = P_O
+        H_O = P_O
         Davleniya = [P_O]
         Skorosty = [V_O]
+        Napory =[H_O]
         self.pipe_par.append([100, 1])  # чтобы избежать ошибок, когда кран в конце
         '''Инициализация объектов и расчет'''
         self.main_text_backend.append('')
@@ -638,7 +666,11 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 V_moment.append(main[i][1])
             Skorosty.append(V_moment)
             self.t += T
-
+            # По напору
+            H_moment = []
+            for i in range(len(main)):
+                H_moment.append(main[i][2])
+            Napory.append(H_moment)
         '''Создание списка координат'''
         dx = L / N
         x = 0
@@ -660,8 +692,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 xx.append(x)
                 x += dx
 
-        Animation(Davleniya[0], Skorosty[0], xx, Davleniya, Skorosty)
-
+        Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
+        print(Napory)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -669,8 +701,6 @@ if __name__ == "__main__":
     window = Window()
     window.show()
     sys.exit(app.exec_())
-
-
 
 '''чтение файла высотных отметок и преобразование в целочисленный список'''
 with open("Example.txt") as text_z:

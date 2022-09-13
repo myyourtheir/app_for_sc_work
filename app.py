@@ -394,6 +394,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 x = int(x)
                 vis_otm.append(x)
             text_z.close()
+
         def find_Jb(Davleniya, Skorosty, d):
             Vjb = Skorosty
             Re = abs(Vjb) * d / self.v
@@ -413,6 +414,10 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             return (Ja)
             # Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
             #                 Skorosty) * T * self.c / (2 * d) - ro*c*g*sin(a)
+
+        def count_H(p, i, V):
+            H = p / (self.ro * self.g) * 1000000 + vis_otm[i] + V**2/(2*self.g)
+            return H
 
         def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char):
             ''' char( 0 - насоса всегда работает, 1 - насос вкл на tt секунде, 2 - насос выкл на tt сек, другое - выключен)'''
@@ -448,8 +453,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                          b * (S * 3600) ** 2)
             p1 = (Ja - self.ro * self.c * VV) / 1000000
             p2 = (Jb + self.ro * self.c * VV) / 1000000
-            H1 = p1 / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
-            H2 = p2 / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
+            H1 = count_H(p1, i, VV)
+            H2 = count_H(p2, i, VV)
+
             if chto_vivodim == 1:
                 return [p1, VV, H1]
             else:
@@ -459,16 +465,16 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             """Условие, может быть, нужно будет переписать"""
 
             if i == 0:
-                Ja = find_Ja(self.p10, 2, d) - T * self.ro * self.c * self.g * np.sin(
-                    (vis_otm[i + 1] - vis_otm[i]) / 1000)
+                Ja = find_Ja(self.p10, 2, d) - T * self.ro * self.c * self.g *(
+                (vis_otm[i + 1] - vis_otm[i]) / 1000)
             else:
-                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d) - T * self.ro * self.c * self.g * np.sin(
-                    (vis_otm[i + 1] - vis_otm[i]) / 1000)
-            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d) + T * self.ro * self.c * self.g * np.sin(
+                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d) - T * self.ro * self.c * self.g *(
+                (vis_otm[i + 1] - vis_otm[i]) / 1000)
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d) + T * self.ro * self.c * self.g * (
                 (vis_otm[i + 1] - vis_otm[i]) / 1000)
             pp = (Ja + Jb) / (2 * 1000000)
             VV = (Ja - Jb) / (2 * self.ro * self.c)
-            H = pp / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
+            H = count_H(pp, i, VV)
             return [pp, VV, H]
 
         def tap_method(P, V, i, chto_vivodim, char, t_char, d, t_otkr, procent):
@@ -535,8 +541,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     zet * self.ro)
             p1 = (Ja - self.ro * self.c * VV) / 1000000
             p2 = (Jb + self.ro * self.c * VV) / 1000000
-            H1 = p1 / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
-            H2 = p2 / (self.ro * self.g) * 1000000 + vis_otm[i] + VV ** 2 / (2 * self.g)
+            H1 = count_H(p1, i, VV)
+            H2 = count_H(p2, i, VV)
             if chto_vivodim == 1:
                 return [p1, VV, H1]
             else:
@@ -556,10 +562,11 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             тут p_ism и v_ism это вложенный двухуровневый список, т.е. список внутри списка'''
             plt.ion()
             plt.style.use('seaborn-whitegrid')
-            fig = plt.figure(figsize=(10, 9))
-            ax1 = fig.add_subplot(3, 1, 2)
-            ax2 = fig.add_subplot(3, 1, 3)
-            ax3 = fig.add_subplot(3, 1, 1)
+            fig = plt.figure(figsize=(10, 10))
+            ax1 = fig.add_subplot(4, 1, 2)
+            ax2 = fig.add_subplot(4, 1, 3)
+            ax3 = fig.add_subplot(4, 1, 1)
+            ax4 = fig.add_subplot(4, 1, 4)
             ax1.set_xlabel('X, м')
             ax2.set_xlabel('X, м')
             ax3.set_xlabel('X, м')
@@ -571,7 +578,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             ax3.set_ylim(-50, 700)
             linep, = ax1.plot(xx, p0, c='green')
             lineV, = ax2.plot(xx, V0)
-            lineH, = ax3.plot(xx, H0, c = "red")
+            lineH, = ax3.plot(xx, H0, c="red")
+            ax4.plot(xx, vis_otm[0 : num_of_elements_in_lists])
             t = 0
             i = 0
             while t <= self.t_rab:
@@ -610,7 +618,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         H_O = P_O
         Davleniya = [P_O]
         Skorosty = [V_O]
-        Napory =[H_O]
+        Napory = [H_O]
         self.pipe_par.append([100, 1])  # чтобы избежать ошибок, когда кран в конце
         '''Инициализация объектов и расчет'''
         self.main_text_backend.append('')
@@ -694,6 +702,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
         print(Napory)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

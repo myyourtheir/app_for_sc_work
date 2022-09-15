@@ -12,11 +12,11 @@ import os
 
 class initial_parameters_and_funcrions():
     def __init__(self):
-        self.p10 = 0.784800  # 100м
+        self.p10 = 784800  # 100м
         self.g = 9.81
         self.c = 1000
         self.o = 0.01
-        self.p20 = 0.15696  # 20 м
+        self.p20 = 156960  # 20 м
         self.w0 = 3000
         # Перевод в систему си
         self.o = self.o / 1000
@@ -399,9 +399,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Vjb = Skorosty
             Re = abs(Vjb) * d / self.v
             lyamjb = self.find_lyam(Re, self.o / d, d)
-            Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d)# + T * self.ro * self.c * self.g * (
-                         #(vis_otm[i + 1] - vis_otm[i]) / 1000)
+            Jb = Davleniya - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
+                Skorosty) * T * self.c / (2 * d)  # + T * self.ro * self.c * self.g * (
+            # (vis_otm[i + 1] - vis_otm[i]) / 1000)
             return (Jb)
             # Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
             #                 Skorosty) * T * self.c / (2 * d) + ro*c*g*sin(a)
@@ -410,15 +410,15 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Vja = Skorosty
             Re = abs(Vja) * d / self.v
             lyamja = self.find_lyam(Re, self.o / d, d)
-            Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d) #- T * self.ro * self.c * self.g * (
-                         #(vis_otm[i-1] - vis_otm[i]) / 1000)
+            Ja = Davleniya + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
+                Skorosty) * T * self.c / (2 * d)  # - T * self.ro * self.c * self.g * (
+            # (vis_otm[i-1] - vis_otm[i]) / 1000)
             return (Ja)
             # Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
             #                 Skorosty) * T * self.c / (2 * d) - ro*c*g*sin(a)
 
         def count_H(p, i, V):
-            H = p / (self.ro * self.g) * 1000000 + vis_otm[i] + (V ** 2) / (2 * self.g)
+            H = p / (self.ro * self.g) + vis_otm[i] + (V ** 2) / (2 * self.g)
             return H
 
         def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char):
@@ -450,8 +450,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             VV = (-self.c / self.g + (
                     (self.c / self.g) ** 2 - b * (S * 3600) ** 2 * ((Jb - Ja) / (self.ro * self.g) - a)) ** 0.5) / (
                          b * (S * 3600) ** 2)
-            p1 = (Ja - self.ro * self.c * VV) / 1000000
-            p2 = (Jb + self.ro * self.c * VV) / 1000000
+            p1 = (Ja - self.ro * self.c * VV)
+            p2 = (Jb + self.ro * self.c * VV)
             H1 = count_H(p1, i, VV)
             H2 = count_H(p2, i, VV)
 
@@ -464,7 +464,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             """Условие, может быть, нужно будет переписать"""
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
             Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
-            pp = (Ja + Jb) / (2 * 1000000)
+            pp = (Ja + Jb) / (2)
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             H = count_H(pp, i, VV)
             return [pp, VV, H]
@@ -528,8 +528,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
             VV = (-2 * self.c * self.ro + (4 * self.ro ** 2 * self.c ** 2 - 2 * zet * self.ro * (Jb - Ja)) ** 0.5) / (
                     zet * self.ro)
-            p1 = (Ja - self.ro * self.c * VV) / 1000000
-            p2 = (Jb + self.ro * self.c * VV) / 1000000
+            p1 = (Ja - self.ro * self.c * VV)
+            p2 = (Jb + self.ro * self.c * VV)
             H1 = count_H(p1, i, VV)
             H2 = count_H(p2, i, VV)
             if chto_vivodim == 1:
@@ -540,14 +540,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         def right_boundary_method(P, V, i, p_const, d):
 
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
-            VV = (Ja - p_const * 1000000) / (self.ro * self.c)
+            VV = (Ja - p_const) / (self.ro * self.c)
             pp = p_const
             H = count_H(p_const, i, VV)
             return [pp, VV, H]
 
         def left_boundary_method(P, V, i, p_const, d):
             Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
-            VV = (p_const * 1000000 - Jb) / (self.ro * self.c)
+            VV = (p_const - Jb) / (self.ro * self.c)
             pp = p_const
             H = count_H(p_const, i, VV)
             return [pp, VV, H]
@@ -570,7 +570,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             ax2.set_ylabel('V, м/с')
             ax3.set_ylabel('H, м')
             ax2.set_ylim(-5, 5)
-            ax1.set_ylim(-3, 7)
+            ax1.set_ylim(-3000000, 7000000)
             ax3.set_ylim(-50, 700)
             linep, = ax1.plot(xx, p0, c='green')
             lineV, = ax2.plot(xx, V0)
@@ -655,8 +655,11 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 elif x == 'right_boundary':
                     main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20,
                                                       self.pipe_par[count_pipe_iter - 1][1]))
+                    iter += 1
                 elif x == 'left_boundary':
-                    main.append(left_boundary_method(Davleniya, Skorosty, iter, self.p10, self.pipe_par[count_pipe_iter][1]))
+                    main.append(
+                        left_boundary_method(Davleniya, Skorosty, iter, self.p10, self.pipe_par[count_pipe_iter][1]))
+                    iter +=1
             '''Распаковка main'''
 
             # По давлению

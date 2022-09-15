@@ -184,7 +184,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.pipe_par = []
         self.pump_par = []
         self.tap_par = []
-        self.main_text_backend = []
+        self.main_text_backend = ['left_boundary']
         """Кнопки добавления объектов"""
 
     def clicked_btns_add(self):
@@ -400,7 +400,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Re = abs(Vjb) * d / self.v
             lyamjb = self.find_lyam(Re, self.o / d, d)
             Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d)
+                Skorosty) * T * self.c / (2 * d)# + T * self.ro * self.c * self.g * (
+                         #(vis_otm[i + 1] - vis_otm[i]) / 1000)
             return (Jb)
             # Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
             #                 Skorosty) * T * self.c / (2 * d) + ro*c*g*sin(a)
@@ -410,13 +411,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Re = abs(Vja) * d / self.v
             lyamja = self.find_lyam(Re, self.o / d, d)
             Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d)
+                Skorosty) * T * self.c / (2 * d) #- T * self.ro * self.c * self.g * (
+                         #(vis_otm[i-1] - vis_otm[i]) / 1000)
             return (Ja)
             # Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
             #                 Skorosty) * T * self.c / (2 * d) - ro*c*g*sin(a)
 
         def count_H(p, i, V):
-            H = p / (self.ro * self.g) * 1000000 + vis_otm[i] + V**2/(2*self.g)
+            H = p / (self.ro * self.g) * 1000000 + vis_otm[i] + (V ** 2) / (2 * self.g)
             return H
 
         def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char):
@@ -443,10 +445,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
             a = (w / self.w0) ** 2 * a  # 302.06   Характеристика насоса # b = 8 * 10 ** (-7)
             S = np.pi * (d / 2) ** 2
-            if i == 0:
-                Ja = find_Ja(self.p10, 2, d)
-            else:
-                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
             VV = (-self.c / self.g + (
                     (self.c / self.g) ** 2 - b * (S * 3600) ** 2 * ((Jb - Ja) / (self.ro * self.g) - a)) ** 0.5) / (
@@ -463,15 +462,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         def pipe_method(P, V, i, d):
             """Условие, может быть, нужно будет переписать"""
-
-            if i == 0:
-                Ja = find_Ja(self.p10, 2, d) - T * self.ro * self.c * self.g *(
-                (vis_otm[i + 1] - vis_otm[i]) / 1000)
-            else:
-                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d) - T * self.ro * self.c * self.g *(
-                (vis_otm[i + 1] - vis_otm[i]) / 1000)
-            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d) + T * self.ro * self.c * self.g * (
-                (vis_otm[i + 1] - vis_otm[i]) / 1000)
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
             pp = (Ja + Jb) / (2 * 1000000)
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             H = count_H(pp, i, VV)
@@ -532,10 +524,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 nu = 100
                 zet = find_zet(nu)
 
-            if i == 0:
-                Ja = find_Ja(self.p10, 2, d)
-            else:
-                Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
             VV = (-2 * self.c * self.ro + (4 * self.ro ** 2 * self.c ** 2 - 2 * zet * self.ro * (Jb - Ja)) ** 0.5) / (
                     zet * self.ro)
@@ -551,9 +540,16 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         def right_boundary_method(P, V, i, p_const, d):
 
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
-            VV = (Ja - p_const) / (self.ro * self.c)
-            pp = p_const / 1000000
-            H = pp / (self.ro * self.g) + vis_otm[i] + VV ** 2 / (2 * self.g)
+            VV = (Ja - p_const * 1000000) / (self.ro * self.c)
+            pp = p_const
+            H = count_H(p_const, i, VV)
+            return [pp, VV, H]
+
+        def left_boundary_method(P, V, i, p_const, d):
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
+            VV = (p_const * 1000000 - Jb) / (self.ro * self.c)
+            pp = p_const
+            H = count_H(p_const, i, VV)
             return [pp, VV, H]
 
         def Animation(p0, V0, H0, xx, p_ism, V_ism, H_ism):
@@ -579,7 +575,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             linep, = ax1.plot(xx, p0, c='green')
             lineV, = ax2.plot(xx, V0)
             lineH, = ax3.plot(xx, H0, c="red")
-            ax4.plot(xx, vis_otm[0 : num_of_elements_in_lists])
+            ax4.plot(xx, vis_otm[0: num_of_elements_in_lists])
             t = 0
             i = 0
             while t <= self.t_rab:
@@ -606,9 +602,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             num_of_elements_in_lists += self.pipe_par[i][0]
             L += self.pipe_par[i][0] * 1000
             N += self.pipe_par[i][0]
-        num_of_elements_in_lists += self.n_btn_Pump * 2 + 1 + self.n_btn_Tap * 2
-        L += 1000
-        N += 2
+        num_of_elements_in_lists += self.n_btn_Pump * 2 + 2 + self.n_btn_Tap * 2
+        L += 2000
+        N += 3
         '''Задание общих параметров трубопровода'''
 
         T = L / (N * self.c)
@@ -621,7 +617,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         Napory = [H_O]
         self.pipe_par.append([100, 1])  # чтобы избежать ошибок, когда кран в конце
         '''Инициализация объектов и расчет'''
-        self.main_text_backend.append('')
+        self.main_text_backend.append('right_boundary')
         while self.t <= self.t_rab:
             count_pump_iter = 0
             iter = 0
@@ -656,10 +652,11 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                                            self.tap_par[count_tap_iter][2], self.tap_par[count_tap_iter][3]))
                     iter += 2
                     count_tap_iter += 1
-                elif x == '':
+                elif x == 'right_boundary':
                     main.append(right_boundary_method(Davleniya, Skorosty, iter, self.p20,
                                                       self.pipe_par[count_pipe_iter - 1][1]))
-
+                elif x == 'left_boundary':
+                    main.append(left_boundary_method(Davleniya, Skorosty, iter, self.p10, self.pipe_par[count_pipe_iter][1]))
             '''Распаковка main'''
 
             # По давлению
@@ -696,7 +693,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             elif y == 'Tap':
                 xx.extend([x, x])
                 x += dx
-            elif y == '':
+            elif y == 'right_boundary' or 'left_boundary':
                 xx.append(x)
                 x += dx
 
@@ -712,9 +709,9 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 '''чтение файла высотных отметок и преобразование в целочисленный список'''
-with open("Example.txt") as text_z:
-    vis_otm_str = text_z.read().split(',')
-    vis_otm = []
-    for x in vis_otm_str:
-        x = int(x)
-        vis_otm.append(x)
+# with open("Example.txt") as text_z:
+#     vis_otm_str = text_z.read().split(',')
+#     vis_otm = []
+#     for x in vis_otm_str:
+#         x = int(x)
+#         vis_otm.append(x)

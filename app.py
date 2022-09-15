@@ -400,22 +400,18 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Re = abs(Vjb) * d / self.v
             lyamjb = self.find_lyam(Re, self.o / d, d)
             Jb = Davleniya - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d)  # + T * self.ro * self.c * self.g * (
-            # (vis_otm[i + 1] - vis_otm[i]) / 1000)
+                Skorosty) * T * self.c / (2 * d)# + T * self.ro * self.c * self.g * (
+                         #(vis_otm[i + 1] - vis_otm[i]) / ((1000 ** 2) + (vis_otm[i + 1] - vis_otm[i]) ** 2) ** 0.5)
             return (Jb)
-            # Jb = Davleniya * 1000000 - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
-            #                 Skorosty) * T * self.c / (2 * d) + ro*c*g*sin(a)
 
         def find_Ja(Davleniya, Skorosty, d):
             Vja = Skorosty
             Re = abs(Vja) * d / self.v
             lyamja = self.find_lyam(Re, self.o / d, d)
             Ja = Davleniya + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d)  # - T * self.ro * self.c * self.g * (
-            # (vis_otm[i-1] - vis_otm[i]) / 1000)
+                Skorosty) * T * self.c / (2 * d) #- T * self.ro * self.c * self.g * (
+                         #(vis_otm[i - 1] - vis_otm[i]) / ((1000 ** 2) + (vis_otm[i - 1] - vis_otm[i]) ** 2) ** 0.5)
             return (Ja)
-            # Ja = Davleniya * 1000000 + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-            #                 Skorosty) * T * self.c / (2 * d) - ro*c*g*sin(a)
 
         def count_H(p, i, V):
             H = p / (self.ro * self.g) + vis_otm[i] + (V ** 2) / (2 * self.g)
@@ -659,7 +655,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 elif x == 'left_boundary':
                     main.append(
                         left_boundary_method(Davleniya, Skorosty, iter, self.p10, self.pipe_par[count_pipe_iter][1]))
-                    iter +=1
+                    iter += 1
             '''Распаковка main'''
 
             # По давлению

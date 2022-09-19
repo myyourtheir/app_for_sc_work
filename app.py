@@ -400,8 +400,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Re = abs(Vjb) * d / self.v
             lyamjb = self.find_lyam(Re, self.o / d, d)
             Jb = Davleniya - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d) + T * self.ro * self.c * self.g * (
-                         (vis_otm[i + 1] - vis_otm[i]) / abs((1000 ** 2) + (vis_otm[i + 1] - vis_otm[i]) ** 2) ** 0.5)
+                Skorosty) * T * self.c / (2 * d)# + T * self.ro * self.c * self.g * (vis_otm[i + 1] - vis_otm[i]) / 1000
             return (Jb)
 
         def find_Ja(Davleniya, Skorosty, d):
@@ -409,12 +408,11 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Re = abs(Vja) * d / self.v
             lyamja = self.find_lyam(Re, self.o / d, d)
             Ja = Davleniya + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d) - T * self.ro * self.c * self.g * (
-                         (vis_otm[i - 1] - vis_otm[i]) / abs((1000 ** 2) + (vis_otm[i - 1] - vis_otm[i]) ** 2) ** 0.5)
+                Skorosty) * T * self.c / (2 * d)# - T * self.ro * self.c * self.g * (vis_otm[i] - vis_otm[i-1]) / 1000
             return (Ja)
 
         def count_H(p, i, V):
-            H = p / (self.ro * self.g) + vis_otm[i] + (V ** 2) / (2 * self.g)
+            H = p / (self.ro * self.g) + vis_otm[i]# + (V ** 2) / (2 * self.g)
             return H
 
         def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char):

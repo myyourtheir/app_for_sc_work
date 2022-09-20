@@ -395,24 +395,24 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 vis_otm.append(x)
             text_z.close()
 
-        def find_Jb(Davleniya, Skorosty, d):
+        def find_Jb(Davleniya, Skorosty, d, i):
             Vjb = Skorosty
             Re = abs(Vjb) * d / self.v
             lyamjb = self.find_lyam(Re, self.o / d, d)
             Jb = Davleniya - self.ro * self.c * Skorosty + lyamjb * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d)# + T * self.ro * self.c * self.g * (vis_otm[i + 1] - vis_otm[i]) / 1000
+                Skorosty) * T * self.c / (2 * d) + T * self.ro * self.c * self.g * (vis_otm[i + 1] - vis_otm[i]) / 1000
             return (Jb)
 
-        def find_Ja(Davleniya, Skorosty, d):
+        def find_Ja(Davleniya, Skorosty, d, i):
             Vja = Skorosty
             Re = abs(Vja) * d / self.v
             lyamja = self.find_lyam(Re, self.o / d, d)
             Ja = Davleniya + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d)# - T * self.ro * self.c * self.g * (vis_otm[i] - vis_otm[i-1]) / 1000
+                Skorosty) * T * self.c / (2 * d) - T * self.ro * self.c * self.g * (vis_otm[i] - vis_otm[i-1]) / 1000
             return (Ja)
 
         def count_H(p, i, V):
-            H = p / (self.ro * self.g) + vis_otm[i]# + (V ** 2) / (2 * self.g)
+            H = p / (self.ro * self.g) + vis_otm[i] + (V ** 2) / (2 * self.g)
             return H
 
         def pump_method(P, V, i, a, b, char, chto_vivodim, d, t_vkl, t_char):
@@ -439,8 +439,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
             a = (w / self.w0) ** 2 * a  # 302.06   Характеристика насоса # b = 8 * 10 ** (-7)
             S = np.pi * (d / 2) ** 2
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
-            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d, i)
+            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d, i)
             VV = (-self.c / self.g + (
                     (self.c / self.g) ** 2 - b * (S * 3600) ** 2 * ((Jb - Ja) / (self.ro * self.g) - a)) ** 0.5) / (
                          b * (S * 3600) ** 2)
@@ -456,8 +456,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         def pipe_method(P, V, i, d):
             """Условие, может быть, нужно будет переписать"""
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
-            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d, i)
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d, i)
             pp = (Ja + Jb) / (2)
             VV = (Ja - Jb) / (2 * self.ro * self.c)
             H = count_H(pp, i, VV)
@@ -518,8 +518,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 nu = 100
                 zet = find_zet(nu)
 
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
-            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d)
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d, i)
+            Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d, i)
             VV = (-2 * self.c * self.ro + (4 * self.ro ** 2 * self.c ** 2 - 2 * zet * self.ro * (Jb - Ja)) ** 0.5) / (
                     zet * self.ro)
             p1 = (Ja - self.ro * self.c * VV)
@@ -533,14 +533,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
         def right_boundary_method(P, V, i, p_const, d):
 
-            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d)
+            Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d, i)
             VV = (Ja - p_const) / (self.ro * self.c)
             pp = p_const
             H = count_H(p_const, i, VV)
             return [pp, VV, H]
 
         def left_boundary_method(P, V, i, p_const, d):
-            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d)
+            Jb = find_Jb(P[-1][i + 1], V[-1][i + 1], d, i)
             VV = (p_const - Jb) / (self.ro * self.c)
             pp = p_const
             H = count_H(p_const, i, VV)
@@ -695,7 +695,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 x += dx
 
         Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
-        print(Napory)
 
 
 if __name__ == "__main__":

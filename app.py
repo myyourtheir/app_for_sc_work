@@ -565,7 +565,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             ax3.set_ylabel('H, м')
             ax2.set_ylim(-5, 5)
             ax1.set_ylim(-3000000, 7000000)
-            ax3.set_ylim(-50, 700)
+            ax3.set_ylim(-500, 700)
             linep, = ax1.plot(xx, p0, c='green')
             lineV, = ax2.plot(xx, V0)
             lineH, = ax3.plot(xx, H0, c="red")
@@ -705,9 +705,6 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 '''чтение файла высотных отметок и преобразование в целочисленный список'''
-# with open("Example.txt") as text_z:
-#     vis_otm_str = text_z.read().split(',')
-#     vis_otm = []
-#     for x in vis_otm_str:
-#         x = int(x)
-#         vis_otm.append(x)
+# with open('Example.txt', 'w+') as text:
+#     for i in range(10000):
+#         text.write(str(random.randint(0, 200))+',')

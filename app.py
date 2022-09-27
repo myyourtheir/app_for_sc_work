@@ -1,8 +1,8 @@
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QDialog
-
-# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,6 +32,69 @@ class initial_parameters_and_funcrions():
         else:
             lyam1 = 0.11 * (eps) ** 0.25
         return (lyam1)
+
+
+# class MplCanvas(FigureCanvas):
+#     def __init__(self,  parent=None, width=10, height=10, dpi=100):
+
+#
+#         super(MplCanvas, self).__init__(self.fig)
+
+
+class Window_Canvas(QMainWindow):
+    def __init__(self, p0, V0, H0, xx, p_ism, V_ism, H_ism, t_rab, T, *args, **kwargs):
+        super(Window_Canvas, self).__init__(*args, **kwargs)
+        self.p0 = p0
+        self.V0 = V0
+        self.H0 = H0
+        self.H_ism = H_ism
+        self.p_ism = p_ism
+        self.V_ism = V_ism
+        self.T = T
+        self.t_rab = t_rab
+        self.xx = xx
+        self.fig = plt.figure(figsize=(10,10))
+        self.canvas = FigureCanvas(self.fig)
+        self.setCentralWidget(self.canvas)
+        self.ax1 = self.fig.add_subplot(4, 1, 2)
+        self.ax2 = self.fig.add_subplot(4, 1, 3)
+        self.ax3 = self.fig.add_subplot(4, 1, 1)
+        self.ax4 = self.fig.add_subplot(4, 1, 4)
+        self.ax1.set_xlabel('X, м')
+        self.ax2.set_xlabel('X, м')
+        self.ax3.set_xlabel('X, м')
+        self.ax1.set_ylabel('P, Мпа')
+        self.ax2.set_ylabel('V, м/с')
+        self.ax3.set_ylabel('H, м')
+        self.ax2.set_ylim(-5, 5)
+        self.ax1.set_ylim(-3000000, 7000000)
+        self.ax3.set_ylim(-500, 700)
+        self.linep, = self.ax1.plot(xx, p0, c='green')
+        self.lineV, = self.ax2.plot(xx, V0)
+        self.lineH, = self.ax3.plot(xx, H0, c="red")
+        self.ax4.plot(xx, vis_otm[0: num_of_elements_in_lists])
+
+
+
+        self.Animate()
+        self.canvas.draw()
+
+    def Animate(self):
+        t = 0
+        i = 0
+        while t <= self.t_rab:
+            self.ax3.set_title(f't = {round(t, 2)} ' + 'c')
+            self.linep.set_ydata(self.p_ism[i])
+            self.linep.set_xdata(self.xx)
+            self.lineV.set_ydata(self.V_ism[i])
+            self.lineV.set_xdata(self.xx)
+            self.lineH.set_ydata(self.H_ism[i])
+            self.lineH.set_xdata(self.xx)
+            plt.draw()
+            plt.gcf().canvas.flush_events()
+            time.sleep(0.01)
+            t += self.T
+            i += 1
 
 
 class Window(QMainWindow, initial_parameters_and_funcrions):
@@ -389,6 +452,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         '''Чтение высотных отметок'''
         with open("Example.txt") as text_z:
             vis_otm_str = text_z.read().split(',')
+            global vis_otm
             vis_otm = []
             for x in vis_otm_str:
                 x = int(x)
@@ -408,7 +472,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Re = abs(Vja) * d / self.v
             lyamja = self.find_lyam(Re, self.o / d, d)
             Ja = Davleniya + self.ro * self.c * Skorosty - lyamja * self.ro * Skorosty * abs(
-                Skorosty) * T * self.c / (2 * d) - T * self.ro * self.c * self.g * (vis_otm[i] - vis_otm[i-1]) / 1000
+                Skorosty) * T * self.c / (2 * d) - T * self.ro * self.c * self.g * (vis_otm[i] - vis_otm[i - 1]) / 1000
             return (Ja)
 
         def count_H(p, i, V):
@@ -591,7 +655,9 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         '''Определение количества элементов в списках'''
         L = 0
         N = 0
+        global num_of_elements_in_lists
         num_of_elements_in_lists = 0
+
         for i in range(len(self.pipe_par)):
             num_of_elements_in_lists += self.pipe_par[i][0]
             L += self.pipe_par[i][0] * 1000
@@ -695,6 +761,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 x += dx
 
         Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
+        # w = Window_Canvas(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory, self.t_rab, T)
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ class initial_parameters_and_funcrions():
 
 class Window_Canvas(QMainWindow):
     def __init__(self, p0, V0, H0, xx, p_ism, V_ism, H_ism, t_rab, T, *args, **kwargs):
-        super(Window_Canvas, self).__init__(*args, **kwargs)
+        super().__init__()
         self.p0 = p0
         self.V0 = V0
         self.H0 = H0
@@ -53,13 +53,15 @@ class Window_Canvas(QMainWindow):
         self.T = T
         self.t_rab = t_rab
         self.xx = xx
-        self.fig = plt.figure(figsize=(10,10))
-        self.canvas = FigureCanvas(self.fig)
-        self.setCentralWidget(self.canvas)
-        self.ax1 = self.fig.add_subplot(4, 1, 2)
-        self.ax2 = self.fig.add_subplot(4, 1, 3)
-        self.ax3 = self.fig.add_subplot(4, 1, 1)
-        self.ax4 = self.fig.add_subplot(4, 1, 4)
+        self._main = QtWidgets.QWidget()
+        self.setCentralWidget(self._main)
+        layout = QtWidgets.QVBoxLayout(self._main)
+        canvas = FigureCanvas(Figure(figsize=(10, 10)))
+        layout.addWidget(canvas)
+        self.ax1 = canvas.figure.add_subplot(4, 1, 2)
+        self.ax2 = canvas.figure.add_subplot(4, 1, 3)
+        self.ax3 = canvas.figure.add_subplot(4, 1, 1)
+        self.ax4 = canvas.figure.add_subplot(4, 1, 4)
         self.ax1.set_xlabel('X, м')
         self.ax2.set_xlabel('X, м')
         self.ax3.set_xlabel('X, м')
@@ -74,10 +76,7 @@ class Window_Canvas(QMainWindow):
         self.lineH, = self.ax3.plot(xx, H0, c="red")
         self.ax4.plot(xx, vis_otm[0: num_of_elements_in_lists])
 
-
-
         self.Animate()
-        self.canvas.draw()
 
     def Animate(self):
         t = 0
@@ -85,16 +84,19 @@ class Window_Canvas(QMainWindow):
         while t <= self.t_rab:
             self.ax3.set_title(f't = {round(t, 2)} ' + 'c')
             self.linep.set_ydata(self.p_ism[i])
-            self.linep.set_xdata(self.xx)
             self.lineV.set_ydata(self.V_ism[i])
-            self.lineV.set_xdata(self.xx)
             self.lineH.set_ydata(self.H_ism[i])
-            self.lineH.set_xdata(self.xx)
             plt.draw()
             plt.gcf().canvas.flush_events()
             time.sleep(0.01)
             t += self.T
             i += 1
+            self.draw_ax(self.lineH)
+            self.draw_ax(self.lineV)
+            self.draw_ax(self.linep)
+
+    def draw_ax(self, line):
+        line.figure.canvas.draw()
 
 
 class Window(QMainWindow, initial_parameters_and_funcrions):
@@ -760,8 +762,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 xx.append(x)
                 x += dx
 
-        Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
-        # w = Window_Canvas(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory, self.t_rab, T)
+        # Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
+        w = Window_Canvas(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory, self.t_rab, T).show()
 
 
 if __name__ == "__main__":

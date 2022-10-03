@@ -1,8 +1,9 @@
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QDialog
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,15 +35,9 @@ class initial_parameters_and_funcrions():
         return (lyam1)
 
 
-# class MplCanvas(FigureCanvas):
-#     def __init__(self,  parent=None, width=10, height=10, dpi=100):
-
-#
-#         super(MplCanvas, self).__init__(self.fig)
-
 
 class Window_Canvas(QMainWindow):
-    def __init__(self, p0, V0, H0, xx, p_ism, V_ism, H_ism, t_rab, T, *args, **kwargs):
+    def __init__(self, p0, V0, H0, xx, p_ism, V_ism, H_ism, t_rab, T, num_of_elements_in_lists):
         super().__init__()
         self.p0 = p0
         self.V0 = V0
@@ -53,6 +48,7 @@ class Window_Canvas(QMainWindow):
         self.T = T
         self.t_rab = t_rab
         self.xx = xx
+        self.num_of_elements_in_lists = num_of_elements_in_lists
         self._main = QtWidgets.QWidget()
         self.setCentralWidget(self._main)
         layout = QtWidgets.QVBoxLayout(self._main)
@@ -74,7 +70,7 @@ class Window_Canvas(QMainWindow):
         self.linep, = self.ax1.plot(xx, p0, c='green')
         self.lineV, = self.ax2.plot(xx, V0)
         self.lineH, = self.ax3.plot(xx, H0, c="red")
-        self.ax4.plot(xx, vis_otm[0: num_of_elements_in_lists])
+        self.ax4.plot(xx, vis_otm[0: self.num_of_elements_in_lists])
 
         self.Animate()
 
@@ -86,14 +82,15 @@ class Window_Canvas(QMainWindow):
             self.linep.set_ydata(self.p_ism[i])
             self.lineV.set_ydata(self.V_ism[i])
             self.lineH.set_ydata(self.H_ism[i])
-            plt.draw()
+
             plt.gcf().canvas.flush_events()
-            time.sleep(0.01)
-            t += self.T
-            i += 1
             self.draw_ax(self.lineH)
             self.draw_ax(self.lineV)
             self.draw_ax(self.linep)
+            time.sleep(0.01)
+            t += self.T
+            i += 1
+
 
     def draw_ax(self, line):
         line.figure.canvas.draw()
@@ -200,7 +197,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         )
         ''' Кнопка добавления крана'''
         self.btn_Tap = QtWidgets.QPushButton(self)
-        self.btn_Tap.setText("Tap")
+        self.btn_Tap.setText("Gate valve")
         self.btn_Tap.move(390, 450)
         self.btn_Tap.setFixedSize(120, 40)
         self.btn_Tap.setStyleSheet(
@@ -255,7 +252,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
     def clicked_btns_add(self):
         self.btn_Pipe.clicked.connect(lambda: self.add_smth('Pipe'))
         self.btn_Pump.clicked.connect(lambda: self.add_smth('Pump'))
-        self.btn_Tap.clicked.connect(lambda: self.add_smth('Tap'))
+        self.btn_Tap.clicked.connect(lambda: self.add_smth('Gate valve'))
 
     def add_smth(self, what_to_add):
 
@@ -588,6 +585,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d, i)
             VV = (-2 * self.c * self.ro + (4 * self.ro ** 2 * self.c ** 2 - 2 * zet * self.ro * (Jb - Ja)) ** 0.5) / (
                     zet * self.ro)
+            #VV = (Ja - Jb)/(self.ro * self.c) * (1 + (zet/(2*self.ro * (self.c)**2) * (Ja - Jb))**0.5)**(-1)
             p1 = (Ja - self.ro * self.c * VV)
             p2 = (Jb + self.ro * self.c * VV)
             H1 = count_H(p1, i, VV)
@@ -632,6 +630,8 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             ax2.set_ylim(-5, 5)
             ax1.set_ylim(-3000000, 7000000)
             ax3.set_ylim(-500, 700)
+            ax4.set_xlabel('X, м')
+            ax4.set_ylabel('z, м')
             linep, = ax1.plot(xx, p0, c='green')
             lineV, = ax2.plot(xx, V0)
             lineH, = ax3.plot(xx, H0, c="red")
@@ -657,7 +657,6 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         '''Определение количества элементов в списках'''
         L = 0
         N = 0
-        global num_of_elements_in_lists
         num_of_elements_in_lists = 0
 
         for i in range(len(self.pipe_par)):
@@ -705,7 +704,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                         main.append(pipe_method(Davleniya, Skorosty, iter, self.pipe_par[count_pipe_iter][1]))
                         iter += 1
                     count_pipe_iter += 1
-                elif x == 'Tap':
+                elif x == 'Gate valve':
                     main.append(tap_method(Davleniya, Skorosty, iter, 1, self.tap_par[count_tap_iter][0],
                                            self.tap_par[count_tap_iter][1], self.pipe_par[count_pipe_iter][1],
                                            self.tap_par[count_tap_iter][2], self.tap_par[count_tap_iter][3]))
@@ -755,15 +754,15 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                     xx.append(x)
                     x += dx
                 count_pipe_iter += 1
-            elif y == 'Tap':
+            elif y == 'Gate valve':
                 xx.extend([x, x])
                 x += dx
             elif y == 'right_boundary' or 'left_boundary':
                 xx.append(x)
                 x += dx
 
-        # Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
-        w = Window_Canvas(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory, self.t_rab, T).show()
+        Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
+        # w = Window_Canvas(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory, self.t_rab, T, num_of_elements_in_lists).show()
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
+from matplotlib.animation import  ArtistAnimation
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,29 +35,17 @@ class initial_parameters_and_funcrions():
         return (lyam1)
 
 
+class MyMplCanvas(FigureCanvas):
+    """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
-class Window_Canvas(QMainWindow):
-    def __init__(self, p0, V0, H0, xx, p_ism, V_ism, H_ism, t_rab, T, num_of_elements_in_lists):
-        super().__init__()
-        self.p0 = p0
-        self.V0 = V0
-        self.H0 = H0
-        self.H_ism = H_ism
-        self.p_ism = p_ism
-        self.V_ism = V_ism
-        self.T = T
-        self.t_rab = t_rab
-        self.xx = xx
-        self.num_of_elements_in_lists = num_of_elements_in_lists
-        self._main = QtWidgets.QWidget()
-        self.setCentralWidget(self._main)
-        layout = QtWidgets.QVBoxLayout(self._main)
-        canvas = FigureCanvas(Figure(figsize=(10, 10)))
-        layout.addWidget(canvas)
-        self.ax1 = canvas.figure.add_subplot(4, 1, 2)
-        self.ax2 = canvas.figure.add_subplot(4, 1, 3)
-        self.ax3 = canvas.figure.add_subplot(4, 1, 1)
-        self.ax4 = canvas.figure.add_subplot(4, 1, 4)
+    def __init__(self, parent=None, width=10, height=10, dpi=100):
+        super(MyMplCanvas, self).__init__()
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        # self.ax1 = fig.add_subplot(111)
+        self.ax1 = self.fig.add_subplot(412)
+        self.ax2 = self.fig.add_subplot(413)
+        self.ax3 = self.fig.add_subplot(411)
+        self.ax4 = self.fig.add_subplot(414)
         self.ax1.set_xlabel('X, м')
         self.ax2.set_xlabel('X, м')
         self.ax3.set_xlabel('X, м')
@@ -67,33 +55,44 @@ class Window_Canvas(QMainWindow):
         self.ax2.set_ylim(-5, 5)
         self.ax1.set_ylim(-3000000, 7000000)
         self.ax3.set_ylim(-500, 700)
-        self.linep, = self.ax1.plot(xx, p0, c='green')
-        self.lineV, = self.ax2.plot(xx, V0)
-        self.lineH, = self.ax3.plot(xx, H0, c="red")
-        self.ax4.plot(xx, vis_otm[0: self.num_of_elements_in_lists])
+        self.ax4.set_xlabel('X, м')
+        self.ax4.set_ylabel('z, м')
 
-        self.Animate()
-
-    def Animate(self):
-        t = 0
-        i = 0
-        while t <= self.t_rab:
-            self.ax3.set_title(f't = {round(t, 2)} ' + 'c')
-            self.linep.set_ydata(self.p_ism[i])
-            self.lineV.set_ydata(self.V_ism[i])
-            self.lineH.set_ydata(self.H_ism[i])
-
-            plt.gcf().canvas.flush_events()
-            self.draw_ax(self.lineH)
-            self.draw_ax(self.lineV)
-            self.draw_ax(self.linep)
-            time.sleep(0.01)
-            t += self.T
-            i += 1
+        # FigureCanvas.__init__(self, fig)
+        # self.setParent(parent)
 
 
-    def draw_ax(self, line):
-        line.figure.canvas.draw()
+class AnimationWidget(QtWidgets.QWidget):
+    def __init__(self, xx, p_ism, V_ism, H_ism, num_of_elements_in_lists, t_rab):
+        super(AnimationWidget, self).__init__()
+
+        self.t_rab = t_rab
+
+        self.xx = xx
+        self.p_ism = p_ism
+        self.V_ism = V_ism
+        self.H_ism = H_ism
+        self.num_of_elements_in_lists = num_of_elements_in_lists
+        self.lines = []
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.canvas = MyMplCanvas(self, width=5, height=4, dpi=100)
+        self.vbox.addWidget(self.canvas)
+        self.canvas.ax4.plot(xx, vis_otm[0: self.num_of_elements_in_lists])
+        # self.line, = self.canvas.axes.plot(self.x, self.y, animated=True, lw=2)
+        self.setLayout(self.vbox)
+
+
+
+    def lines(self):
+        for i in range(len(self.p_ism)):
+            self.linep, = self.canvas.ax1.plot(self.xx, self.p_ism[i], animated=True, c='green')
+            self.lineV, = self.canvas.ax2.plot(self.xx, self.V_ism[i], animated=True)
+            self.lineH, = self.canvas.ax3.plot(self.xx, self.H_ism[i], animated=True, c="red")
+            self.lines.append([self.linep, self.lineV, self.lineH])
+        return self.lines
+
+    def start_ani(self):
+        self.ani = ArtistAnimation(self.canvas.fig, self.lines, interval=50,blit=False)
 
 
 class Window(QMainWindow, initial_parameters_and_funcrions):
@@ -585,7 +584,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d, i)
             VV = (-2 * self.c * self.ro + (abs(4 * (self.ro * self.c) ** 2 - 2 * zet * self.ro * (Jb - Ja))) ** 0.5) / (
                     zet * self.ro)
-            #VV = (Ja - Jb)/(self.ro * self.c) * (1 + (zet/(2*self.ro * (self.c)**2) * (Ja - Jb))**0.5)**(-1)
+            # VV = (Ja - Jb)/(self.ro * self.c) * (1 + (zet/(2*self.ro * (self.c)**2) * (Ja - Jb))**0.5)**(-1)
             p1 = (Ja - self.ro * self.c * VV)
             p2 = (Jb + self.ro * self.c * VV)
             H1 = count_H(p1, i, VV)
@@ -762,10 +761,10 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 xx.append(x)
                 x += dx
 
-        Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
-        # w = Window_Canvas(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory, self.t_rab, T, num_of_elements_in_lists).show()
-
-
+        # Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
+        aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, self.t_rab)
+        aw.show()
+        print(1)
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle('Fusion')

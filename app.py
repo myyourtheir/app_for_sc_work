@@ -551,14 +551,14 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 elif 80 <= nu < 85:
                     zet = (6000 - 2500) / 10 * (nu - 80) + 2500
                 else:  # 85 <= nu <= 100:
-                    zet = (100000000 - 6000) / 15 * (nu - 85) + 6000
+                    zet = (100000 - 6000) / 15 * (nu - 85) + 6000
                 return zet
 
             if char == 0:
                 nu = 0
                 zet = find_zet(nu)
             elif char == 1:  # открытие на tt сек
-                if t_char <= self.t <= t_char + t_otkr:
+                if t_char <= self.t <= (t_char + t_otkr):
                     nu = 100 - procent / t_otkr * (self.t - t_char)
                     zet = find_zet(nu)
                 elif self.t < t_char:
@@ -583,7 +583,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
 
             Ja = find_Ja(P[-1][i - 1], V[-1][i - 1], d, i)
             Jb = find_Jb(P[-1][i + 2], V[-1][i + 2], d, i)
-            VV = (-2 * self.c * self.ro + (4 * self.ro ** 2 * self.c ** 2 - 2 * zet * self.ro * (Jb - Ja)) ** 0.5) / (
+            VV = (-2 * self.c * self.ro + (abs(4 * (self.ro * self.c) ** 2 - 2 * zet * self.ro * (Jb - Ja))) ** 0.5) / (
                     zet * self.ro)
             #VV = (Ja - Jb)/(self.ro * self.c) * (1 + (zet/(2*self.ro * (self.c)**2) * (Ja - Jb))**0.5)**(-1)
             p1 = (Ja - self.ro * self.c * VV)
@@ -679,6 +679,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
         self.pipe_par.append([100, 1])  # чтобы избежать ошибок, когда кран в конце
         '''Инициализация объектов и расчет'''
         self.main_text_backend.append('right_boundary')
+        self.t = 0
         while self.t <= self.t_rab:
             count_pump_iter = 0
             iter = 0
@@ -722,7 +723,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                         left_boundary_method(Davleniya, Skorosty, iter, self.p10, self.pipe_par[count_pipe_iter][1]))
                     iter += 1
             '''Распаковка main'''
-
+            self.t += T
             # По давлению
             p_moment = []
             for i in range(len(main)):
@@ -734,7 +735,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             for i in range(len(main)):
                 V_moment.append(main[i][1])
             Skorosty.append(V_moment)
-            self.t += T
+
             # По напору
             H_moment = []
             for i in range(len(main)):

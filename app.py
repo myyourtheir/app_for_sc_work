@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib.animation import  ArtistAnimation
+from matplotlib.animation import ArtistAnimation, FuncAnimation
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,60 +39,73 @@ class MyMplCanvas(FigureCanvas):
     """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
     def __init__(self, parent=None, width=10, height=10, dpi=100):
-        super(MyMplCanvas, self).__init__()
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
-        # self.ax1 = fig.add_subplot(111)
-        self.ax1 = self.fig.add_subplot(412)
-        self.ax2 = self.fig.add_subplot(413)
-        self.ax3 = self.fig.add_subplot(411)
-        self.ax4 = self.fig.add_subplot(414)
-        self.ax1.set_xlabel('X, м')
-        self.ax2.set_xlabel('X, м')
-        self.ax3.set_xlabel('X, м')
-        self.ax1.set_ylabel('P, Мпа')
-        self.ax2.set_ylabel('V, м/с')
-        self.ax3.set_ylabel('H, м')
-        self.ax2.set_ylim(-5, 5)
-        self.ax1.set_ylim(-3000000, 7000000)
-        self.ax3.set_ylim(-500, 700)
-        self.ax4.set_xlabel('X, м')
-        self.ax4.set_ylabel('z, м')
+        fig = Figure(figsize=(width, height), dpi=dpi)
 
-        # FigureCanvas.__init__(self, fig)
-        # self.setParent(parent)
+        # self.ax1 = fig.add_subplot(111)
+        self.ax1 = fig.add_subplot(3, 1, 2)
+        self.ax1.set_xlabel('X, м')
+        self.ax1.set_ylabel('P, Мпа')
+        self.ax1.set_ylim(-3000000, 7000000)
+
+        self.ax2 = fig.add_subplot(3, 1, 3)
+        self.ax2.set_ylabel('V, м/с')
+        self.ax2.set_xlabel('X, м')
+        self.ax2.set_ylim(-5, 5)
+
+        self.ax3 = fig.add_subplot(3, 1, 1)
+        self.ax3.set_xlabel('X, м')
+        self.ax3.set_ylabel('H, м')
+        self.ax3.set_ylim(-500, 700)
+
+        # self.ax4 = fig.add_subplot(4, 1, 4)
+        # self.ax4.set_xlabel('X, м')
+        # self.ax4.set_ylabel('z, м')
+        super(MyMplCanvas, self).__init__(fig)
 
 
 class AnimationWidget(QtWidgets.QWidget):
     def __init__(self, xx, p_ism, V_ism, H_ism, num_of_elements_in_lists, t_rab):
         super(AnimationWidget, self).__init__()
+        self.setGeometry(450, 50, 1000, 950)
 
         self.t_rab = t_rab
-
         self.xx = xx
         self.p_ism = p_ism
         self.V_ism = V_ism
         self.H_ism = H_ism
         self.num_of_elements_in_lists = num_of_elements_in_lists
         self.lines = []
-        self.vbox = QtWidgets.QVBoxLayout()
-        self.canvas = MyMplCanvas(self, width=5, height=4, dpi=100)
-        self.vbox.addWidget(self.canvas)
-        self.canvas.ax4.plot(xx, vis_otm[0: self.num_of_elements_in_lists])
+
+        vbox = QtWidgets.QVBoxLayout()
+        self.canvas = MyMplCanvas(self, width=10, height=10, dpi=100)
+        vbox.addWidget(self.canvas)
+        hbox = QtWidgets.QHBoxLayout()
+        self.pause_resume = QtWidgets.QPushButton('Pause/Resume', self)
+        hbox.addWidget(self.pause_resume)
+        vbox.addLayout(hbox)
+        self.setLayout(vbox)
+
+
+        self.canvas.ax3.plot(xx, vis_otm[0: self.num_of_elements_in_lists])
         # self.line, = self.canvas.axes.plot(self.x, self.y, animated=True, lw=2)
-        self.setLayout(self.vbox)
+        self.start_ani()
 
 
-
-    def lines(self):
+    def cr_lines(self):
         for i in range(len(self.p_ism)):
             self.linep, = self.canvas.ax1.plot(self.xx, self.p_ism[i], animated=True, c='green')
-            self.lineV, = self.canvas.ax2.plot(self.xx, self.V_ism[i], animated=True)
+            self.lineV, = self.canvas.ax2.plot(self.xx, self.V_ism[i], animated=True, c ='blue')
             self.lineH, = self.canvas.ax3.plot(self.xx, self.H_ism[i], animated=True, c="red")
             self.lines.append([self.linep, self.lineV, self.lineH])
         return self.lines
 
     def start_ani(self):
-        self.ani = ArtistAnimation(self.canvas.fig, self.lines, interval=50,blit=False)
+        self.ani = ArtistAnimation(
+            fig=self.canvas.figure,
+            artists=self.cr_lines(),
+            interval=50,
+            blit=False
+        )
 
 
 class Window(QMainWindow, initial_parameters_and_funcrions):
@@ -762,9 +775,11 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 x += dx
 
         # Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
-        aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, self.t_rab)
-        aw.show()
+        self.aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, self.t_rab)
+        self.aw.show()
         print(1)
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle('Fusion')

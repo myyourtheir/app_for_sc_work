@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib.animation import ArtistAnimation, FuncAnimation
+from matplotlib.animation import ArtistAnimation
 import time
 import matplotlib.pyplot as plt
 import numpy as np

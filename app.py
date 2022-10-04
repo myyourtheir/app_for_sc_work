@@ -3,13 +3,13 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib.animation import ArtistAnimation
+from matplotlib.animation import ArtistAnimation, FuncAnimation
 import time
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import os
-
+from threading import Thread
 
 class initial_parameters_and_funcrions():
     def __init__(self):
@@ -46,16 +46,19 @@ class MyMplCanvas(FigureCanvas):
         self.ax1.set_xlabel('X, м')
         self.ax1.set_ylabel('P, Мпа')
         self.ax1.set_ylim(-3000000, 7000000)
+        self.ax1.grid()
 
         self.ax2 = fig.add_subplot(3, 1, 3)
         self.ax2.set_ylabel('V, м/с')
         self.ax2.set_xlabel('X, м')
         self.ax2.set_ylim(-5, 5)
+        self.ax2.grid()
 
         self.ax3 = fig.add_subplot(3, 1, 1)
         self.ax3.set_xlabel('X, м')
         self.ax3.set_ylabel('H, м')
         self.ax3.set_ylim(-500, 700)
+        self.ax3.grid()
 
         # self.ax4 = fig.add_subplot(4, 1, 4)
         # self.ax4.set_xlabel('X, м')
@@ -64,11 +67,11 @@ class MyMplCanvas(FigureCanvas):
 
 
 class AnimationWidget(QtWidgets.QWidget):
-    def __init__(self, xx, p_ism, V_ism, H_ism, num_of_elements_in_lists, t_rab):
+    def __init__(self, xx, p_ism, V_ism, H_ism, num_of_elements_in_lists, dT):
         super(AnimationWidget, self).__init__()
         self.setGeometry(450, 50, 1000, 950)
 
-        self.t_rab = t_rab
+        self.dT = dT
         self.xx = xx
         self.p_ism = p_ism
         self.V_ism = V_ism
@@ -84,18 +87,28 @@ class AnimationWidget(QtWidgets.QWidget):
         hbox.addWidget(self.pause_resume)
         vbox.addLayout(hbox)
         self.setLayout(vbox)
-
-
-        self.canvas.ax3.plot(xx, vis_otm[0: self.num_of_elements_in_lists])
-        # self.line, = self.canvas.axes.plot(self.x, self.y, animated=True, lw=2)
+        self.canvas.ax3.plot(xx, vis_otm[0: self.num_of_elements_in_lists], label='Z(x), м')
+        self.lbl_t = QtWidgets.QLabel(self)
+        self.lbl_t.move(900, 50)
+        # t1 = Thread(target=self.start_ani())
+        #
+        # t2 = Thread(target= self.count_t())
+        # t1.start()
+        # t2.start()
+        # t1.join()
+        # t2.join()
         self.start_ani()
+    def count_t(self):
+        for i in range(len(self.p_ism)):
+            self.lbl_t.setText(f't = {round(i * self.dT, 2)}' + 'c')
 
 
     def cr_lines(self):
         for i in range(len(self.p_ism)):
+
             self.linep, = self.canvas.ax1.plot(self.xx, self.p_ism[i], animated=True, c='green')
-            self.lineV, = self.canvas.ax2.plot(self.xx, self.V_ism[i], animated=True, c ='blue')
-            self.lineH, = self.canvas.ax3.plot(self.xx, self.H_ism[i], animated=True, c="red")
+            self.lineV, = self.canvas.ax2.plot(self.xx, self.V_ism[i], animated=True, c='blue')
+            self.lineH, = self.canvas.ax3.plot(self.xx, self.H_ism[i], label='H(x), м', animated=True, c="red")
             self.lines.append([self.linep, self.lineV, self.lineH])
         return self.lines
 
@@ -775,7 +788,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 x += dx
 
         # Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
-        self.aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, self.t_rab)
+        self.aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, T)
         self.aw.show()
         print(1)
 

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import os
-from threading import Thread
+
 
 class initial_parameters_and_funcrions():
     def __init__(self):
@@ -67,10 +67,11 @@ class MyMplCanvas(FigureCanvas):
 
 
 class AnimationWidget(QtWidgets.QWidget):
-    def __init__(self, xx, p_ism, V_ism, H_ism, num_of_elements_in_lists, dT):
+    def __init__(self, xx, p_ism, V_ism, H_ism, num_of_elements_in_lists, dT, t_list):
         super(AnimationWidget, self).__init__()
         self.setGeometry(450, 50, 1000, 950)
 
+        self.t_list = t_list
         self.dT = dT
         self.xx = xx
         self.p_ism = p_ism
@@ -86,26 +87,25 @@ class AnimationWidget(QtWidgets.QWidget):
         self.pause_resume = QtWidgets.QPushButton('Pause/Resume', self)
         hbox.addWidget(self.pause_resume)
         vbox.addLayout(hbox)
+        self.pause_resume.setCheckable(True)
+        self.pause_resume.clicked.connect(lambda: self.press_btn_pause())
         self.setLayout(vbox)
         self.canvas.ax3.plot(xx, vis_otm[0: self.num_of_elements_in_lists], label='Z(x), м')
         self.lbl_t = QtWidgets.QLabel(self)
         self.lbl_t.move(900, 50)
-        # t1 = Thread(target=self.start_ani())
-        #
-        # t2 = Thread(target= self.count_t())
-        # t1.start()
-        # t2.start()
-        # t1.join()
-        # t2.join()
+        # self.title = self.canvas.ax3.text(0.5, 0.85, "", bbox={'facecolor': 'w', 'alpha': 0.5, 'pad': 5},
+        #                 transform=self.canvas.ax3.transAxes, ha="center")
         self.start_ani()
-    def count_t(self):
-        for i in range(len(self.p_ism)):
-            self.lbl_t.setText(f't = {round(i * self.dT, 2)}' + 'c')
 
+
+    def press_btn_pause(self):
+        if self.pause_resume.isChecked():
+            self.ani.pause()
+        else:
+            self.ani.resume()
 
     def cr_lines(self):
         for i in range(len(self.p_ism)):
-
             self.linep, = self.canvas.ax1.plot(self.xx, self.p_ism[i], animated=True, c='green')
             self.lineV, = self.canvas.ax2.plot(self.xx, self.V_ism[i], animated=True, c='blue')
             self.lineH, = self.canvas.ax3.plot(self.xx, self.H_ism[i], label='H(x), м', animated=True, c="red")
@@ -114,8 +114,9 @@ class AnimationWidget(QtWidgets.QWidget):
 
     def start_ani(self):
         self.ani = ArtistAnimation(
-            fig=self.canvas.figure,
-            artists=self.cr_lines(),
+            self.canvas.figure,
+            self.cr_lines(),
+            # self.count_t(),
             interval=50,
             blit=False
         )
@@ -709,6 +710,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             count_pump_iter = 0
             iter = 0
             main = []
+            t_list = []
             count_pipe_iter = 0
             count_tap_iter = 0
             for i, x in enumerate(self.main_text_backend):
@@ -748,6 +750,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                         left_boundary_method(Davleniya, Skorosty, iter, self.p10, self.pipe_par[count_pipe_iter][1]))
                     iter += 1
             '''Распаковка main'''
+            t_list.append(round(self.t, 2))
             self.t += T
             # По давлению
             p_moment = []
@@ -788,7 +791,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 x += dx
 
         # Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
-        self.aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, T)
+        self.aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, T, t_list)
         self.aw.show()
         print(1)
 

@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib.animation import ArtistAnimation, FuncAnimation
+from matplotlib.animation import ArtistAnimation
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -715,7 +715,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
             count_pump_iter = 0
             iter = 0
             main = []
-            t_list = []
+            self.t_list = []
             count_pipe_iter = 0
             count_tap_iter = 0
             for i, x in enumerate(self.main_text_backend):
@@ -755,7 +755,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                         left_boundary_method(Davleniya, Skorosty, iter, self.p10, self.pipe_par[count_pipe_iter][1]))
                     iter += 1
             '''Распаковка main'''
-            t_list.append(round(self.t, 2))
+            self.t_list.append(round(self.t, 2))
             self.t += T
             # По давлению
             p_moment = []
@@ -796,7 +796,7 @@ class Window(QMainWindow, initial_parameters_and_funcrions):
                 x += dx
 
         # Animation(Davleniya[0], Skorosty[0], Napory[0], xx, Davleniya, Skorosty, Napory)
-        self.aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, T, t_list)
+        self.aw = AnimationWidget(xx, Davleniya, Skorosty, Napory, num_of_elements_in_lists, T, self.t_list)
         self.aw.show()
         print(1)
 

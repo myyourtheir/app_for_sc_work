@@ -13,7 +13,7 @@ import os
 
 class initial_parameters_and_funcrions():
     def __init__(self):
-        self.p10 = 784800  # 100м
+        self.p10 = 156960 #784800   100м
         self.g = 9.81
         self.c = 1000
         self.o = 0.01
@@ -84,7 +84,7 @@ class AnimationWidget(QtWidgets.QWidget):
         self.canvas = MyMplCanvas(self, width=10, height=10, dpi=100)
         vbox.addWidget(self.canvas)
         hbox = QtWidgets.QHBoxLayout()
-        self.pause_resume = QtWidgets.QPushButton('Pause/Resume', self)
+        self.pause_resume = QtWidgets.QPushButton('Pause', self)
         hbox.addWidget(self.pause_resume)
         vbox.addLayout(hbox)
         self.pause_resume.setCheckable(True)
@@ -94,29 +94,34 @@ class AnimationWidget(QtWidgets.QWidget):
         self.lbl_t = QtWidgets.QLabel(self)
         self.lbl_t.move(900, 50)
         # self.title = self.canvas.ax3.text(0.5, 0.85, "", bbox={'facecolor': 'w', 'alpha': 0.5, 'pad': 5},
-        #                 transform=self.canvas.ax3.transAxes, ha="center")
-        self.start_ani()
+        #                  transform=self.canvas.ax3.transAxes, ha="center")
 
+        self.start_ani()
 
     def press_btn_pause(self):
         if self.pause_resume.isChecked():
             self.ani.pause()
+            self.pause_resume.setText('Resume')
         else:
             self.ani.resume()
+            self.pause_resume.setText('Pause')
 
     def cr_lines(self):
         for i in range(len(self.p_ism)):
+        # for i, x in enumerate(self.t_list):
             self.linep, = self.canvas.ax1.plot(self.xx, self.p_ism[i], animated=True, c='green')
             self.lineV, = self.canvas.ax2.plot(self.xx, self.V_ism[i], animated=True, c='blue')
             self.lineH, = self.canvas.ax3.plot(self.xx, self.H_ism[i], label='H(x), м', animated=True, c="red")
-            self.lines.append([self.linep, self.lineV, self.lineH])
+            self.t_lbl_update = self.canvas.ax3.annotate(f't = {round(i, 2)} ' + 'c', (800, 800), xycoords='figure pixels')
+            # self.title.set_text(f't = {round(i, 2)} ' + 'c')
+            self.lines.append([self.linep, self.lineV, self.lineH, self.t_lbl_update])
+
         return self.lines
 
     def start_ani(self):
         self.ani = ArtistAnimation(
             self.canvas.figure,
             self.cr_lines(),
-            # self.count_t(),
             interval=50,
             blit=False
         )
